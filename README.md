@@ -72,7 +72,7 @@ You can use any implementation as client you want and set all parameters to conf
 
 ### Redis key
 
-Redis is a key-value-store, so it needs a key to store the values. To reduce the typing, you can use the default behaviour of this library, which uses unique identifier as keys. You can get the key with the `get_uuid`-method to any datatype.
+Redis is a key-value-store, so it needs a key to store the values. To reduce the typing, you can use the default behaviour of this library, which uses unique identifier as keys. You can get the key with the `get_redis_key`-method to any datatype.
 
 But if you want to use this library in a microservice, which should be duplicated over your cluster, this behaviour would be toxic to your implementation, so you can use the `key`-parameter to set an identifier.
 
@@ -82,25 +82,32 @@ foo_uuid = String("bar")
 foo_key = String("bar", key="foo")
 
 print(foo_uuid) # expect: "bar"
-print(foo_uuid.get_uuid()) # expect: similar to "12345678-1234-5678-1234-567812345678"
+print(foo_uuid.get_redis_key()) # expect: similar to "12345678-1234-5678-1234-567812345678"
 
 print(foo_key) # expect: "bar"
-print(foo_key.get_uuid()) # expect: "foo"
+print(foo_key.get_redis_key()) # expect: "foo"
 ```
 
-If you query the uuid as key in your redis installation, you will not get the serialization of your data as you would expected, because this library uses a prefix per default to work with a big redis installation and to not interfere with any other implementations. You can get the key with prefix with `get_redis_key`-method and set this prefix in `configure`. The default value for prefix is `datatype-redis`.
+If you query the uuid as key in your redis installation, you will not get the serialization of your data as you would expected, because this library uses a prefix per default to work with a big redis installation and to not interfere with any other implementations. You can get the key with prefix with `get_redis_key_full`-method and set this prefix in `configure`. The default value for prefix is `datatype-redis`.
 
 ```python
 from datatype_redis import configure
 foo_uuid = String("bar", key="fooKey")
-print(foo_uuid.get_redis_key()) # expect: "datatype-redis/fooKey"
+print(foo_uuid.get_redis_key_full()) # expect: "datatype-redis/fooKey"
 print(foo_uuid) # expect: "bar"
-configure(prefixer="fooPrefix")
-print(foo_uuid.get_redis_key()) # expect: "fooPrefix/fooKey"
+configure(prefix="fooPrefix")
+print(foo_uuid.get_redis_key_full()) # expect: "fooPrefix/fooKey"
 print(foo_uuid) # expect: "bar"
 ```
 
-**Beware**: If you change your prefix, while you initialized a datatype, the library will rename all keys automatically. This will take some time on larger redis installations.
+**Beware**: If you change your prefix, while you initialized a datatype, the library will rename all keys automatically with a matching filter. This will take some time on larger redis installations.
+
+If you want to get the current prefix as string, you can call the `get_prefix`-method.
+
+```python
+from datatype_redis import get_prefix
+print(get_prefix()) # expect default: "datatype-redis"
+```
 
 ### Rename key
 
@@ -109,9 +116,9 @@ If you want to store your value in another key, you can do that with the `rename
 ```python
 from datatype_redis import configure
 foo_uuid = String("bar", key="fooKey")
-print(foo_uuid.get_redis_key()) # expect: "datatype-redis/fooKey"
+print(foo_uuid.get_redis_key_full()) # expect: "datatype-redis/fooKey"
 foo_uuid.rename("barKey")
-print(foo_uuid.get_redis_key()) # expect: "datatype-redis/barKey"
+print(foo_uuid.get_redis_key_full()) # expect: "datatype-redis/barKey"
 ```
 
 ### Msgpack as serializer
