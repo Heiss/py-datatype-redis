@@ -19,6 +19,8 @@ This library is heavily inspired by [hot-redis](https://github.com/stephenmcd/ho
 
 ## Options
 
+In the following, the options of this library will be described.
+
 ### Set redis as client
 
 As default, the library use StrictRedis from [redis-py](https://pypi.org/project/redis/) as implementation. If you want to use another implementation, you have to inherit from this class.
