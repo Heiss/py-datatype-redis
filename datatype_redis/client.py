@@ -1,4 +1,4 @@
-from redis import Redis, StrictRedis
+from .redisclient import RedisClient, StrictRedis
 import threading
 
 _thread = threading.local()
@@ -45,7 +45,7 @@ def configure(**kwargs):
         _config["client"] = kwargs["client"]
         del kwargs["client"]
     else:
-        _config["client"] = StrictRedis
+        _config["client"] = RedisClient
 
     if "client_config" in _config:
         previous_config = _config["client_config"]
@@ -102,3 +102,4 @@ def transaction():
         _thread.client.execute()
     finally:
         _thread.client = client
+
