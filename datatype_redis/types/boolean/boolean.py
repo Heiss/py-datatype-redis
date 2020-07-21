@@ -1,7 +1,7 @@
-from ..boolean.bitwise import Bitwise
+from .bitwise import Bitwise
 from ..operator import inplace
 
-class Int(Bitwise):
+class Bool(Bitwise):
     """
     Redis integer <-> Python integer.
     """

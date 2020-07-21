@@ -1,66 +1,64 @@
 from ..base import Base
+from ...client import transaction
 
 class Dict(Base):
     """
     Redis hash <-> Python dict
     """
 
-    @property
-    def value(self):
-        return self.hgetall()
+    def __init__(self, *args, **kwargs):
+        super(Dict, self).__init__(*args, **kwargs)
+        
+        self.prefixer = '{}/{}/{{}}'.format(self.prefix, self.key).format
 
     @value.setter
-    def value(self, value):
+    def value(self, value=None):
         if not isinstance(value, dict):
             try:
                 value = dict(value)
             except TypeError:
                 value = None
-        if value:
-            self.update(value)
+
+        if value is not None:
+            with transaction() as client:
+                for key, val in value.items():
+                    self.__setitem__(key, value)
 
     def __len__(self):
         return self.hlen()
 
     def __contains__(self, key):
-        return self.hexists(key)
+        return self.hexists(self.prefixer(key))
 
     def __iter__(self):
-        return self.iterkeys()
+        return self.keys()
 
     def __setitem__(self, key, value):
-        self.hset(key, value)
+        self.set(self.prefixer(key), self.dumps(value))
 
     def __getitem__(self, key):
-        value = self.get(key)
+        value = self.loads(self.get(self.prefixer(key)))
         if value is None:
             raise KeyError(key)
         return value
 
     def __delitem__(self, key):
-        if self.hdel(key) == 0:
+        if self.delete(self.prefixer(key)) == 0:
             raise KeyError(key)
 
-    def update(self, value):
-        self.hmset(value)
+    def _keys(self):
+        match = self.prefixer('*')
+        return self.redis.scan_iter(match=match)
 
     def keys(self):
-        return self.hkeys()
+        prefix = self.prefixer('')
+        return (k.strip(prefix) for k in self._keys())
 
     def values(self):
-        return self.hvals()
+        return (self[k] for k in self.keys())
 
     def items(self):
-        return self.value.items()
-
-    def iterkeys(self):
-        return iter(self.keys())
-
-    def itervalues(self):
-        return iter(self.values())
-
-    def iteritems(self):
-        return iter(self.items())
+        return ((k, self[k]) for k in self.keys())
 
     def setdefault(self, key, value=None):
         if self.hsetnx(key, value) == 1:
@@ -69,7 +67,7 @@ class Dict(Base):
             return self.get(key)
 
     def get(self, key, default=None):
-        value = self.hget(key)
+        value = self.get(key)
         return value if value is not None else default
 
     def has_key(self, key):

@@ -6,6 +6,7 @@ from .types.sequence import *
 from .types.set import *
 from .types.text import *
 from .types.semaphore import *
+from .types.base import Base
 
 def int_or_str(value):
     try:
@@ -17,5 +18,24 @@ __version__ = '0.1'
 VERSION = tuple(map(int_or_str, __version__.split('.')))
 
 __all__ = [
-    "Base"
+    "Base",
+    "Bool",
+    "Int",
+    "Float",
+    "String",
+    "List",
+    "Queue",
+    "LifoQueue",
+    "SetQueue",
+    "LifoSetQueue",
+    "Set",
+    "Dict",
+    "PubSubDict",
+    "PubSubCacheDict",
+    "DefaultDict",
+    "MultiSet",
+    "BoundedSemaphore",
+    "Semaphore",
+    "Lock",
+    "RLock",
 ]

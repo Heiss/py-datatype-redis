@@ -1,1 +1,1 @@
-from .boolean import *
+from .bool import *

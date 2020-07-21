@@ -79,8 +79,9 @@ def rename_keys(old_prefix):
     
     rename_key_list = []
 
+    match = "{}/*".format(get_prefix())
     for old_key in client.scan_iter(match=old_prefix):
-        new_key = str(old_key).replace(old_prefix, get_prefix(), 1)
+        new_key = str(old_key).replace(old_prefix, match, 1)
         rename_key_list.append((old_key, new_key))
 
     with transaction() as client:
