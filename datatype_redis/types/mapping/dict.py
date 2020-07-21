@@ -1,6 +1,7 @@
 from ..base import Base
 from ...client import transaction
 
+
 class Dict(Base):
     """
     Redis hash <-> Python dict
@@ -8,8 +9,8 @@ class Dict(Base):
 
     def __init__(self, *args, **kwargs):
         super(Dict, self).__init__(*args, **kwargs)
-        
-        self.prefixer = '{}/{}/{{}}'.format(self.prefix, self.key).format
+
+        self.prefixer = "{}/{}/{{}}".format(self.prefix, self.key).format
 
     @value.setter
     def value(self, value=None):
@@ -25,7 +26,7 @@ class Dict(Base):
                     self.__setitem__(key, value)
 
     def __len__(self):
-        return self.hlen()
+        return sum(1 for k in self._keys())
 
     def __contains__(self, key):
         return self.hexists(self.prefixer(key))
@@ -47,11 +48,11 @@ class Dict(Base):
             raise KeyError(key)
 
     def _keys(self):
-        match = self.prefixer('*')
+        match = self.prefixer("*")
         return self.redis.scan_iter(match=match)
 
     def keys(self):
-        prefix = self.prefixer('')
+        prefix = self.prefixer("")
         return (k.strip(prefix) for k in self._keys())
 
     def values(self):
@@ -77,13 +78,15 @@ class Dict(Base):
         return self.__class__(self.value)
 
     def clear(self):
-        self.delete()
+        for k in self:
+            del self[k]
 
     @classmethod
     def fromkeys(cls, *args):
         if len(args) == 1:
             args += ("",)
         return cls({}.fromkeys(*args))
+
 
 class DefaultDict(Dict):
     """
