@@ -1,5 +1,7 @@
 from ..base import Base
 from ..operator import inplace
+from ..pubsub import PubSub
+
 
 class String(Sequential):
     """
@@ -46,6 +48,7 @@ class String(Sequential):
     def __iter__(self):
         return iter(self.value)
 
+
 class ImmutableString(String):
     """
     Redis string <-> Python string (actually immutable).
@@ -61,3 +64,7 @@ class ImmutableString(String):
 
     def __setitem__(self, i):
         raise TypeError
+
+
+class PubSubString(String, PubSub):
+    __setitem__ = super().publish_wrap(super().__setitem__)

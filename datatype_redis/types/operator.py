@@ -2,16 +2,6 @@ import sys
 
 operatormodule = sys.modules[__name__]
 
-
-####################################################################
-#                                                                  #
-#  The following functions are all used for creating methods that  #
-#  get assigned to all the magic operator names for each type,     #
-#  and make much more sense further down where they're applied.    #
-#                                                                  #
-####################################################################
-
-
 def value_left(self, right):
     """
     Returns the value of the right type instance to use in an

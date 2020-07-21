@@ -1,49 +1,24 @@
 from .dict import Dict
+from ..pubsub import PubSub
 from threading import Lock
 from pylru import WriteThroughCacheManager
 
 NoneKey = object()
 
-class PubSubDict(Dict):
+
+class PubSubDict(Dict, PubSub):
     def __init__(self, *args, **kwargs):
         super(PubSubDict, self).__init__(*args, **kwargs)
-        self.subscriber = None
-        self.pubsub = self.client.pubsub()
-
-    def subscribe(self, **callbacks):
-        """Register callbacks to deal with update and delete events
-        """
-        self.callback = callbacks
-
-        if self.subscriber is None:
-            ps = self.pubsub
-            handelers = {self.prefixer(action): self._handel_factory(callback)
-                         for action, callback in callbacks.items()}
-            ps.subscribe(**handelers)
-            self.subscriber = ps.run_in_thread(sleep_time=0.01, daemon=True)
-
-    def _handel_factory(self, callback):
-        def handeler(mesg):
-            callback(mesg['data'])
-        return handeler
-
-    def publish(self, action, key):
-        self.publish(self.prefixer(action), str(key))
 
     def __setitem__(self, key, value):
         super(PubSubDict, self).__setitem__(key, value)
-        self.publish('update', key)
+        self.publish("update", key)
 
     def __delitem__(self, key):
         super(PubSubDict, self).__delitem__(key)
         # publish the delete so it is removed else where
-        self.publish('delete', key)
+        self.publish("delete", key)
 
-    def close(self):
-        if hasattr(self, 'pubsub'):
-            self.pubsub.close()
-            self.subscriber.stop()
-            self.subscriber.join()
 
 class PubSubCacheDict(WriteThroughCacheManager, Dict):
     def __init__(self, store=None, cache=None, *args, **kwargs):
@@ -61,7 +36,7 @@ class PubSubCacheDict(WriteThroughCacheManager, Dict):
 
         self.mutex = Lock()
 
-        if hasattr(store, 'pubsub'):
+        if hasattr(store, "pubsub"):
             store.subscribe(update=self._update_key, delete=self._delete_key)
 
     def _update_key(self, key):

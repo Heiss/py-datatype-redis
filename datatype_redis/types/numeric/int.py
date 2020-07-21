@@ -1,6 +1,7 @@
 from .numeric import Numeric
 from ..boolean.bitwise import Bitwise
 from ..operator import inplace
+from ..pubsub import PubSub
 
 class Int(Numeric, Bitwise):
     """
@@ -21,3 +22,7 @@ class Int(Numeric, Bitwise):
     __ixor__    = inplace("number_xor")
     __ilshift__ = inplace("number_lshift")
     __irshift__ = inplace("number_rshift")
+
+
+class PubSubInt(Int, PubSub):
+    pass

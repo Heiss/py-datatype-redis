@@ -8,21 +8,27 @@ from .types.text import *
 from .types.semaphore import *
 from .types.base import Base
 
+
 def int_or_str(value):
     try:
         return int(value)
     except ValueError:
         return value
-        
-__version__ = '0.1'
-VERSION = tuple(map(int_or_str, __version__.split('.')))
+
+
+__version__ = "0.1"
+VERSION = tuple(map(int_or_str, __version__.split(".")))
 
 __all__ = [
     "Base",
     "Bool",
+    "PubSubBool",
     "Int",
     "Float",
+    "PubSubInt",
+    "PubSubFloat",
     "String",
+    "PubSubString",
     "List",
     "Queue",
     "LifoQueue",

@@ -1,5 +1,6 @@
 from .numeric import Numeric
 from ..operator import inplace
+from ..pubsub import PubSub
 
 class Float(Numeric):
     """
@@ -20,3 +21,6 @@ class Float(Numeric):
     def __isub__(self, f):
         self.incrbyfloat(f * -1)
         return self
+
+class PubSubFloat(Float, PubSub):
+    pass
