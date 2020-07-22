@@ -1,6 +1,7 @@
 from ..base import Base
 from ..operator import inplace
 from ..pubsub import PubSub
+from ..sequence.sequential import Sequential
 
 
 class String(Sequential):
@@ -67,4 +68,4 @@ class ImmutableString(String):
 
 
 class PubSubString(String, PubSub):
-    __setitem__ = super().publish_wrap(super().__setitem__)
+    __setitem__ = PubSub.publish_wrap(String.__setitem__)

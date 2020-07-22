@@ -1,8 +1,10 @@
 from .redisclient import RedisClient, StrictRedis
 import threading
+import contextlib
 
 _thread = threading.local()
 _config = {}
+
 
 def get_prefix():
     """Returns the current used prefix.
@@ -19,7 +21,8 @@ def get_prefix():
     if "prefix" not in _config["client_config"]:
         configure()
 
-    return _config["client_config"]["prefix"]
+    return _config["prefix"]
+
 
 def default_client():
     global _config
@@ -27,17 +30,20 @@ def default_client():
     try:
         _thread.client
     except AttributeError:
+        if not "client" in _config or not "client_config" in _config:
+            configure()
+
         client = _config["client"](**_config["client_config"])
         if not isinstance(client, StrictRedis):
             raise ValueError("Given client is not a StrictRedis-Class.")
 
-        setattr(_thread, "client", client)
+        _thread.client = client
     return _thread.client
+
 
 def configure(**kwargs):
     """
     Configure the client and everything in a central place.
-    If you change the config 
     """
     global _config
 
@@ -55,11 +61,11 @@ def configure(**kwargs):
         _config["client_config"] = kwargs
 
     if "prefix" not in kwargs:
-        _config["client_config"]["prefix"] = "datatype-redis"
+        _config["prefix"] = "datatype_redis"
 
     if previous_config is not None:
         rename_keys(previous_config["prefix"])
-    
+
 
 def rename_keys(old_prefix):
     global _config
@@ -76,7 +82,7 @@ def rename_keys(old_prefix):
 
     if old_prefix == _config["client_config"]["prefix"]:
         return False
-    
+
     rename_key_list = []
 
     match = "{}/*".format(get_prefix())
@@ -87,6 +93,7 @@ def rename_keys(old_prefix):
     with transaction() as client:
         for old_key, new_key in rename_key_list:
             client.rename(old_key, new_key)
+
 
 @contextlib.contextmanager
 def transaction():

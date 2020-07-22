@@ -3,7 +3,7 @@ from ..client import default_client, transaction, get_prefix
 from .operator import *
 import operator
 
-class Base(Object):
+class Base:
     def __init__(self, initial=None, key=None, serializer=None, client=None, namespace=None, **kwargs):
         """Base type that all others inherit. Contains the basic comparison
         operators as well as the dispatch for proxying to methods on the

@@ -1,6 +1,5 @@
 import sys
 
-operatormodule = sys.modules[__name__]
 
 def value_left(self, right):
     """
@@ -49,7 +48,11 @@ def inplace(method_name):
     Returns a type instance method that will call the given method
     name, used for inplace operators such as __iadd__ and __imul__.
     """
-    return getattr(operatormodule, method_name)
+
+    def method(self, other):
+        getattr(self, method_name)(value_left(self, other))
+        return self
+    return method
 
 
 def to_bits(m):

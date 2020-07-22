@@ -12,7 +12,7 @@ from .types.base import Base
 def int_or_str(value):
     try:
         return int(value)
-    except ValueError:
+    except TypeError:
         return value
 
 

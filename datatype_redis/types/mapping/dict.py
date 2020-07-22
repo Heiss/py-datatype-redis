@@ -12,6 +12,10 @@ class Dict(Base):
 
         self.prefixer = "{}/{}/{{}}".format(self.prefix, self.key).format
 
+    @property
+    def value(self):
+        return self.items()
+
     @value.setter
     def value(self, value=None):
         if not isinstance(value, dict):

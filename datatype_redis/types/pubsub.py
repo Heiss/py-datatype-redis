@@ -1,6 +1,7 @@
 from .base import Base
 
 
+
 class PubSub(Base):
     def __init__(self):
         self.subscriber = None
@@ -10,6 +11,15 @@ class PubSub(Base):
             self.value.fset = super().publish_wrap(super().value.fset)
         except NameError:
             pass
+
+    @staticmethod
+    def publish_wrap(fn):
+        def wrapper(*args, **kwargs):
+            self = args[0]
+            fn(*args, **kwargs)
+            self.publish("update", **kwargs)
+
+        return wrapper
 
     def subscribe(self, **callbacks):
         """Register callbacks to deal with update and delete events
@@ -35,13 +45,6 @@ class PubSub(Base):
         if key is None:
             key = self.get_redis_key_full()
         self.publish(self.prefixer(action), str(key))
-
-    def publish_wrap(self, f):
-        def wrapper(*args, **kwargs):
-            f(*args, **kwargs)
-            self.publish("update", **kwargs)
-
-        return wrapper
 
     def close(self):
         if hasattr(self, "pubsub"):
