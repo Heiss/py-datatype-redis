@@ -1,5 +1,6 @@
 from tests.prepare import BaseTestCase, datatype_redis, unittest
 import time
+import queue
 
 
 class QueueTests(BaseTestCase):
@@ -12,13 +13,13 @@ class QueueTests(BaseTestCase):
         q.put(b)
         self.assertIn(b, q)
         self.assertRaises(
-            datatype_redis.queue.Full, lambda: q.put("popcaan", block=False)
+            queue.Full, lambda: q.put("popcaan", block=False)
         )
         start = time.time()
         timeout = 2
         try:
             q.put("popcaan", timeout=timeout)
-        except datatype_redis.queue.Full:
+        except queue.Full:
             pass
         self.assertTrue(time.time() - start >= timeout)
 
@@ -32,12 +33,12 @@ class QueueTests(BaseTestCase):
         self.assertNotIn(a, q)
         self.assertEqual(b, q.get())
         self.assertNotIn(b, q)
-        self.assertRaises(datatype_redis.queue.Empty, lambda: q.get(block=False))
+        self.assertRaises(queue.Empty, lambda: q.get(block=False))
         start = time.time()
         timeout = 2
         try:
             q.get(timeout=timeout)
-        except datatype_redis.queue.Empty:
+        except queue.Empty:
             pass
         self.assertTrue(time.time() - start >= timeout)
 
