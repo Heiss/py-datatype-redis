@@ -1,6 +1,7 @@
 from .redisclient import RedisClient, Redis
 import threading
 import contextlib
+import copy
 
 _thread = threading.local()
 _config = {}
@@ -18,7 +19,7 @@ def get_prefix():
     """
     global _config
 
-    if "prefix" not in _config["client_config"]:
+    if "prefix" not in _config:
         configure()
 
     return _config["prefix"]
@@ -54,7 +55,7 @@ def configure(**kwargs):
         _config["client"] = RedisClient
 
     if "client_config" in _config:
-        previous_config = _config["client_config"]
+        previous_config = copy.deepcopy(_config)
         _config["client_config"].update(kwargs)
     else:
         previous_config = None

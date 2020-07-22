@@ -3,8 +3,17 @@ from ..client import default_client, transaction, get_prefix
 from .operator import *
 import operator
 
+
 class Base:
-    def __init__(self, initial=None, key=None, serializer=None, client=None, namespace=None, **kwargs):
+    def __init__(
+        self,
+        initial=None,
+        key=None,
+        serializer=None,
+        client=None,
+        namespace=None,
+        **kwargs
+    ):
         """Base type that all others inherit. Contains the basic comparison
         operators as well as the dispatch for proxying to methods on the
         Redis client.
@@ -35,13 +44,14 @@ class Base:
             self.dumps = serializer.dumps
         else:
             from msgpack import dumps, loads
+
             self.loads = loads
             self.dumps = dumps
 
         self.key = key or str(uuid.uuid4())
 
-        self.prefix = namespace or get_prefix
-        self.prefixer = '{}/{{}}'.format(self.prefix).format
+        self.prefix = namespace or get_prefix()
+        self.prefixer = "{}/{{}}".format(self.prefix).format
 
         if initial is not None:
             if key is None:
@@ -78,7 +88,7 @@ class Base:
         try:
             func = getattr(self.client or default_client(), name)
         except AttributeError:
-            raise
+            func = super().__getattribute__(self, name)
         return lambda *a, **k: func(self.key, *a, **k)
 
     def rename(self, new_redis_key):
