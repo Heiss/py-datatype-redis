@@ -1,6 +1,9 @@
 from .list import List
 import time
 from ..set.set import Set
+from ..base import ValueDecorator
+import queue
+
 
 class Queue(List):
     """
@@ -39,7 +42,7 @@ class Queue(List):
                     break
                 if timeout is not None and time.time() - start >= timeout:
                     raise queue.Full
-                time.sleep(.1)
+                time.sleep(0.1)
 
     def put_nowait(self, item):
         self.put(item, block=False)
@@ -60,7 +63,16 @@ class Queue(List):
 
     def join(self):
         while not self.empty():
-            time.sleep(.1)
+            time.sleep(0.1)
+
+    @ValueDecorator
+    def queue_put(self, item, maxsize):
+        if self.qsize() >= maxsize:
+            return False
+
+        self.append(item)
+        return True
+
 
 class LifoQueue(Queue):
     """
@@ -98,4 +110,5 @@ class LifoSetQueue(LifoQueue, SetQueue):
     """
     Redis list + Redis set <-> LifoQueue with only unique items.
     """
+
     pass

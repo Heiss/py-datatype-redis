@@ -16,10 +16,12 @@ class Float(Numeric):
         if value is not None:
             self.set(value)
 
-    __iadd__ = inplace("incrbyfloat")
-
     def __isub__(self, f):
         self.incrbyfloat(f * -1)
+        return self
+
+    def __iadd__(self, f):
+        self.incrbyfloat(f * 1) # this fixes conversion
         return self
 
 class PubSubFloat(Float, PubSub):

@@ -49,8 +49,8 @@ def inplace(method_name):
     name, used for inplace operators such as __iadd__ and __imul__.
     """
 
-    def method(self, other):
-        getattr(self, method_name)(value_left(self, other))
+    def method(self, *args):
+        getattr(self, method_name)(*args)
         return self
 
     return method
@@ -64,126 +64,21 @@ def tbl_to_number(m):
     return int(m)
 
 
-def bit_or(m, n):
-    return m | n
-
-
-def bit_and(m, n):
-    return m & n
-
-
-def bit_not(m):
-    return ~m
-
-
-def bit_xor(m, n):
-    return m ^ n
-
-
-def bit_lshift(m, bits):
-    return m << bits
-
-
-def bit_rshift(m, bits):
-    return m >> bits
-
-
-def number_or(left, right):
-    value = bit_or(left.value(), right.value())
-    left.value(value)
-    return value
-
-
-def number_and(left, right):
-    value = bit_and(left.value(), right.value())
-    left.value(value)
-    return value
-
-
-def number_xor(left, right):
-    value = bit_xor(left.value(), right.value())
-    left.value(value)
-    return value
-
-
-def number_lshift(left, right):
-    value = bit_lshift(left.value(), right.value())
-    left.value(value)
-    return value
-
-
-def number_rshift(left, right):
-    value = bit_rshift(left.value(), right.value())
-    left.value(value)
-    return value
-
-
-def number_multiply(left, right):
-    value = left.value() * right.value()
-    left.value(value)
-    return value
-
-
-def number_divide(left, right):
-    value = left.value() / right.value()
-    left.value(value)
-    return value
-
-
-def number_floordiv(left, right):
-    value = left.value() // right.value()
-    left.value(value)
-    return value
-
-
-def number_mod(left, right):
-    value = left.value() % right.value()
-    left.value(value)
-    return value
-
-
-def number_pow(left, right):
-    value = left.value() ** right.value()
-    left.value(value)
-    return value
-
-
-def string_multiply(left, right):
-    value = left.value() + right.value()
-    left.value(value)
-    return value
-
-
-def string_setitem(left, right):
-    value = left.value() + right.value()
-    left.value(value)
-    return value
-
-def list_pop(left, right):
-    pass
-
-def list_insert(left, right):
-    pass
-
-def list_reverse(left, right):
-    pass
-
-def list_multiply(left, right):
-    pass
-
 def set_intersection_update(left, right):
     pass
+
 
 def set_difference_update(left, right):
     pass
 
+
 def set_symmetric_difference(left, right):
     pass
 
-def queue_put(left, right):
-    pass
+
+
+
 
 def multiset_intersection_update(left, right):
     pass
-
 

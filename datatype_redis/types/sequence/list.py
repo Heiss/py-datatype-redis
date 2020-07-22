@@ -1,7 +1,9 @@
 from .sequential import Sequential
 from ..operator import inplace
+from ..base import ValueDecorator
 
 import redis
+
 
 class List(Sequential):
     """
@@ -14,7 +16,11 @@ class List(Sequential):
 
     @value.setter
     def value(self, value):
+        self.clear()
         self.extend(value)
+
+    def clear(self):
+        self.delete()
 
     __iadd__ = inplace("extend")
     __imul__ = inplace("list_multiply")
@@ -75,3 +81,29 @@ class List(Sequential):
 
     def sort(self, reverse=False):
         self._dispatch("sort")(desc=reverse, store=self.key, alpha=True)
+
+    @ValueDecorator
+    def list_pop(self, right):
+        value = list(self.value)
+        del value[right]
+        self.value = value
+        return value
+
+    @ValueDecorator
+    def list_insert(self, i, right):
+        value = list(self.value)
+        value.insert(i, right)
+        self.value = value
+        return value
+
+    def list_reverse(self):
+        value = list(self.value)
+        value.reverse()
+        self.value = value
+        return value
+
+    @ValueDecorator
+    def list_multiply(self, right):
+        value = self.value * right
+        self.value = value
+        return value

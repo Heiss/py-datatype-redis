@@ -1,4 +1,4 @@
-from ..base import Base
+from ..base import Base, ValueDecorator
 from ..operator import inplace
 from ..pubsub import PubSub
 from ..sequence.sequential import Sequential
@@ -19,10 +19,28 @@ class String(Sequential):
             self.set(value)
 
     __iadd__ = inplace("append")
-    __imul__ = inplace("string_multiply")
+    __imul__ = inplace("multiply")
 
     def __len__(self):
         return self.strlen()
+
+    @ValueDecorator
+    def append(self, other):
+        value = self.value + other
+        self.value = value
+        return value
+
+    def setitem(self, start, stop, s):
+        value = self.value
+        value = value[:start] + s + value[stop:]
+        self.value = value
+        return value
+
+    @ValueDecorator
+    def multiply(self, other):
+        value = self.value * other
+        self.value = value
+        return value
 
     def __setitem__(self, i, s):
         if isinstance(i, slice):
@@ -32,7 +50,7 @@ class String(Sequential):
             start = i
             stop = None
         if stop is not None and stop < start + len(s):
-            self.string_setitem(start, stop, s)
+            self.setitem(start, stop, s)
         else:
             self.setrange(start, s)
 

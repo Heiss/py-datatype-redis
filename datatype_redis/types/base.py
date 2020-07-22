@@ -2,6 +2,22 @@ import uuid
 from ..client import default_client, transaction, get_prefix
 from .operator import *
 import operator
+from functools import wraps
+
+
+def ValueDecorator(fn):
+    @wraps(fn)
+    def wrapper(self, *args):
+        try:
+            arguments = list(args)
+            arguments[0] = arguments[0].value
+            args = tuple(arguments)
+        except AttributeError:
+            pass
+
+        return fn(self, *args)
+
+    return wrapper
 
 
 class Base:
@@ -31,6 +47,8 @@ class Base:
 
         try:
             self.client = client(kwargs)
+        except TypeError:
+            self.client = client
         except Exception:
             self.client = None
 
@@ -87,9 +105,10 @@ class Base:
     def _dispatch(self, name):
         try:
             func = getattr(self.client or default_client(), name)
+            return lambda *a, **k: func(self.key, *a, **k)
         except AttributeError:
             func = super().__getattribute__(self, name)
-        return lambda *a, **k: func(self.key, *a, **k)
+            return lambda *a, **k: func(*a, **k)
 
     def rename(self, new_redis_key):
         """Moves the value to a new key. 

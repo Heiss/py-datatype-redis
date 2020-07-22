@@ -103,6 +103,9 @@ class ListTests(BaseTestCase):
         a.insert(1, i)
         b.insert(1, i)
         self.assertEqual(a, b)
+        a.insert(0, a[-1])
+        b.insert(0, a[-1])
+        self.assertEqual(a, b)
 
     
     def test_pop(self):
