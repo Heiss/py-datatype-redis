@@ -1,3 +1,6 @@
+[![Maintainability](https://api.codeclimate.com/v1/badges/9945440b076661b87ccb/maintainability)](https://codeclimate.com/github/Heiss/py-datatype-redis/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/9945440b076661b87ccb/test_coverage)](https://codeclimate.com/github/Heiss/py-datatype-redis/test_coverage)
+
 # Redis for builtin-datatypes
 
 This library implements all builtin datatypes from python3 with a redis backend.

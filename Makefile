@@ -2,10 +2,10 @@ build:
 	python setup.py build
 
 install:
-	python setup.py install
+	python setup.py install | grep -v 'already satisfied' || true
 
 install-dev:
-	pip install -r requirements_dev.txt
+	pip install -r requirements_dev.txt | grep -v 'already satisfied' || true
 
 test: install-dev
 	python -m pytest --cov=datatype_redis --cov-report xml

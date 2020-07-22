@@ -3,7 +3,7 @@ on: push
 
 jobs:
   # Label of the container job
-  container-job:
+  test:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
@@ -39,7 +39,7 @@ jobs:
           REDIS_PORT: 6379
 
   build-n-publish:
-    needs: container-job
+    needs: test
     name: Build and publish Python distributions to PyPI
     runs-on: ubuntu-18.04
     steps:
@@ -57,3 +57,18 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
+
+  coverage:
+    needs: [ test ]
+    name: coverage
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - uses: actions/setup-python@master
+      with:
+        python-version: '3.6'
+    - uses: paambaati/codeclimate-action@v2.5.3
+      env:
+        CC_TEST_REPORTER_ID: ${{ secrets.CodeClimate }}
+      with:
+        coverageCommand: coverage xml
