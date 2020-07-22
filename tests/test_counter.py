@@ -1,4 +1,4 @@
-from prepare import BaseTestCase, datatype_redis, unittest
+from tests.prepare import BaseTestCase, datatype_redis, unittest
 import collections
 
 

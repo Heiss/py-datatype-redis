@@ -22,9 +22,9 @@ datatype_redis.Base.__init__ = base_wrapper(datatype_redis.Base.__init__)
 
 class BaseTestCase(unittest.TestCase):
     def tearDown(self):
-        client = prepare.datatype_redis.default_client()
-        while prepare.keys:
-            client.delete(prepare.keys.pop())
+        client = datatype_redis.default_client()
+        while keys:
+            client.delete(keys.pop())
 
     # Removed in Python 3.
     def assertItemsEqual(self, a, b):
