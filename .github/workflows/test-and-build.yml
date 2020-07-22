@@ -7,7 +7,7 @@ jobs:
     # Containers must run in Linux based operating systems
     runs-on: ubuntu-latest
     # Docker Hub image that `container-job` executes in
-    container: python:3.8
+    container: python:3.6
 
     # Service containers to run with `container-job`
     services:
@@ -44,10 +44,10 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@master
-      - name: Set up Python 3.7
+      - name: Set up Python 3.6
         uses: actions/setup-python@v1
         with:
-          python-version: 3.7
+          python-version: 3.6
       - name: Install dependencies
         run: python3 -m pip install --user --upgrade setuptools wheel twine
       - name: Build source
