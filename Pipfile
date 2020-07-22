@@ -10,6 +10,7 @@ pytest-cov = "*"
 redis = "*"
 redis-py-cluster = "*"
 pylru = "*"
+msgpack = "*"
 
 [requires]
 python_version = "3.6"

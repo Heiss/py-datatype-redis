@@ -1,4 +1,5 @@
 -i https://pypi.org/simple
+msgpack==1.0.0
 pylru==1.2.0
 redis-py-cluster==2.0.0
 redis==3.0.1
