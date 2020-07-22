@@ -3,6 +3,7 @@ from ..operator import inplace, op_right
 import operator, uuid
 from functools import reduce
 
+
 class Set(Bitwise):
     """
     Redis set <-> Python set
@@ -23,7 +24,7 @@ class Set(Bitwise):
         return [s.key for s in sets]
 
     __iand__ = inplace("intersection_update")
-    __ior__  = inplace("update")
+    __ior__ = inplace("update")
     __ixor__ = inplace("symmetric_difference_update")
     __isub__ = inplace("difference_update")
     __rsub__ = op_right(operator.sub)
@@ -130,3 +131,12 @@ class Set(Bitwise):
 
     def issuperset(self, other):
         return self >= other
+
+    def set_intersection_update(self, *args):
+        pass
+
+    def set_difference_update(self, *args):
+        pass
+
+    def set_symmetric_difference(self, *args):
+        pass

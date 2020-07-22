@@ -2,6 +2,7 @@ from .dict import Dict
 from ..operator import op_left, op_right, inplace
 import operator, collections
 
+
 class MultiSet(Dict):
     """
     Redis hash <-> Python dict <-> Python's collections.Counter.
@@ -17,18 +18,18 @@ class MultiSet(Dict):
         kwargs = dict([(k, int(v)) for k, v in value.items()])
         return collections.Counter(**kwargs)
 
-    __add__  = op_left(operator.add)
-    __sub__  = op_left(operator.sub)
-    __and__  = op_left(operator.and_)
-    __or__   = op_left(operator.or_)
+    __add__ = op_left(operator.add)
+    __sub__ = op_left(operator.sub)
+    __and__ = op_left(operator.and_)
+    __or__ = op_left(operator.or_)
     __radd__ = op_right(operator.add)
     __rsub__ = op_right(operator.sub)
     __rand__ = op_right(operator.and_)
-    __ror__  = op_right(operator.or_)
+    __ror__ = op_right(operator.or_)
     __iadd__ = inplace("update")
     __isub__ = inplace("subtract")
     __iand__ = inplace("intersection_update")
-    __ior__  = inplace("union_update")
+    __ior__ = inplace("union_update")
 
     # Return 0 as a default, which allows bitwise ops to work correctly
     # in Python 3, as its Counter type no longer supports working with
@@ -105,5 +106,9 @@ class MultiSet(Dict):
         if n:
             values = values[:n]
         return values
+
+    def multiset_intersection_update(self, *args):
+        pass
+
 
 collections.MutableMapping.register(MultiSet)

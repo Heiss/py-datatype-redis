@@ -3,7 +3,7 @@ from ..client import default_client, transaction, get_prefix
 from .operator import *
 import operator
 from functools import wraps
-
+from redis.exceptions import ResponseError
 
 def ValueDecorator(fn):
     @wraps(fn)
@@ -68,8 +68,8 @@ class Base:
 
         self.key = key or str(uuid.uuid4())
 
-        self.prefix = namespace or get_prefix()
-        self.prefixer = "{}/{{}}".format(self.prefix).format
+        self.prefix = namespace or get_prefix
+        self.prefixer = "{}/{{}}".format(self.prefix()).format
 
         if initial is not None:
             if key is None:
@@ -105,7 +105,7 @@ class Base:
     def _dispatch(self, name):
         try:
             func = getattr(self.client or default_client(), name)
-            return lambda *a, **k: func(self.key, *a, **k)
+            return lambda *a, **k: func(self.prefixer(self.key), *a, **k)
         except AttributeError:
             func = super().__getattribute__(self, name)
             return lambda *a, **k: func(*a, **k)

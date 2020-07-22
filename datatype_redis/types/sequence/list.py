@@ -80,7 +80,7 @@ class List(Sequential):
         return self.value.count(item)
 
     def sort(self, reverse=False):
-        self._dispatch("sort")(desc=reverse, store=self.key, alpha=True)
+        self._dispatch("sort")(desc=reverse, store=self.prefixer(self.key), alpha=True)
 
     @ValueDecorator
     def list_pop(self, right):

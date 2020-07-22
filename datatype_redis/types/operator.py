@@ -64,21 +64,6 @@ def tbl_to_number(m):
     return int(m)
 
 
-def set_intersection_update(left, right):
-    pass
 
 
-def set_difference_update(left, right):
-    pass
-
-
-def set_symmetric_difference(left, right):
-    pass
-
-
-
-
-
-def multiset_intersection_update(left, right):
-    pass
 

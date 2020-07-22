@@ -1,5 +1,5 @@
 from ..base import Base
-from ...client import transaction
+from ...client import transaction, default_client
 
 
 class Dict(Base):
@@ -10,7 +10,7 @@ class Dict(Base):
     def __init__(self, *args, **kwargs):
         super(Dict, self).__init__(*args, **kwargs)
 
-        self.prefixer = "{}/{}/{{}}".format(self.prefix, self.key).format
+        self.prefixer = "{}/{}/{{}}".format(self.prefix(), self.key).format
 
     @property
     def value(self):
@@ -27,13 +27,13 @@ class Dict(Base):
         if value is not None:
             with transaction() as client:
                 for key, val in value.items():
-                    self.__setitem__(key, value)
+                    self[key] = value
 
     def __len__(self):
         return sum(1 for k in self._keys())
 
     def __contains__(self, key):
-        return self.hexists(self.prefixer(key))
+        return self.exists(self.prefixer(key))
 
     def __iter__(self):
         return self.keys()
@@ -62,34 +62,53 @@ class Dict(Base):
     def values(self):
         return (self[k] for k in self.keys())
 
+    def update(self, value):
+        with transaction() as client:
+            self.clear()
+            for key, val in value.items():
+                self[key] = val
+
     def items(self):
         return ((k, self[k]) for k in self.keys())
 
     def setdefault(self, key, value=None):
-        if self.hsetnx(key, value) == 1:
+        if self.setnx(self.prefixer(key), self.dumps(value)) == 1:
             return value
         else:
-            return self.get(key)
+            return self.get(self.prefixer(key))
 
     def get(self, key, default=None):
-        value = self.get(key)
+        value = super().get(self.prefixer(key))
         return value if value is not None else default
 
     def has_key(self, key):
-        return key in self
+        return key in self.keys()
 
     def copy(self):
         return self.__class__(self.value)
 
     def clear(self):
-        for k in self:
+        for k in self._keys:
             del self[k]
+
+    def iterkeys(self):
+        return iter(self.keys())
+
+    def itervalues(self):
+        return iter(self.values())
+
+    def iteritems(self):
+        return iter(self.items())
 
     @classmethod
     def fromkeys(cls, *args):
         if len(args) == 1:
             args += ("",)
         return cls({}.fromkeys(*args))
+
+    def _dispatch(self, name):
+        func = getattr(self.client or default_client(), name)
+        return lambda *a, **k: func(*a, **k)
 
 
 class DefaultDict(Dict):
@@ -99,7 +118,7 @@ class DefaultDict(Dict):
 
     def __init__(self, default_factory, *args, **kwargs):
         self.default_factory = default_factory
-        super(DefaultDict, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __getitem__(self, key):
         return self.setdefault(key, self.default_factory())
