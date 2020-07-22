@@ -14,7 +14,7 @@ class Dict(Base):
 
     @property
     def value(self):
-        return self.items()
+        return dict(self.items())
 
     @value.setter
     def value(self, value=None):
@@ -53,7 +53,7 @@ class Dict(Base):
 
     def _keys(self):
         match = self.prefixer("*")
-        return self.redis.scan_iter(match=match)
+        return self.scan_iter(match=match)
 
     def keys(self):
         prefix = self.prefixer("")

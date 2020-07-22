@@ -52,6 +52,7 @@ def inplace(method_name):
     def method(self, other):
         getattr(self, method_name)(value_left(self, other))
         return self
+
     return method
 
 
@@ -145,3 +146,44 @@ def number_pow(left, right):
     value = left.value() ** right.value()
     left.value(value)
     return value
+
+
+def string_multiply(left, right):
+    value = left.value() + right.value()
+    left.value(value)
+    return value
+
+
+def string_setitem(left, right):
+    value = left.value() + right.value()
+    left.value(value)
+    return value
+
+def list_pop(left, right):
+    pass
+
+def list_insert(left, right):
+    pass
+
+def list_reverse(left, right):
+    pass
+
+def list_multiply(left, right):
+    pass
+
+def set_intersection_update(left, right):
+    pass
+
+def set_difference_update(left, right):
+    pass
+
+def set_symmetric_difference(left, right):
+    pass
+
+def queue_put(left, right):
+    pass
+
+def multiset_intersection_update(left, right):
+    pass
+
+

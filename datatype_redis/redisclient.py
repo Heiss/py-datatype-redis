@@ -1,7 +1,7 @@
-from redis import StrictRedis
+from redis import Redis
 
 
-class RedisClient(StrictRedis):
+class RedisClient(Redis):
     """
     A Redis client wrapper
     """

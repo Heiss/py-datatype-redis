@@ -1,4 +1,4 @@
-from .redisclient import RedisClient, StrictRedis
+from .redisclient import RedisClient, Redis
 import threading
 import contextlib
 
@@ -34,8 +34,8 @@ def default_client():
             configure()
 
         client = _config["client"](**_config["client_config"])
-        if not isinstance(client, StrictRedis):
-            raise ValueError("Given client is not a StrictRedis-Class.")
+        if not isinstance(client, Redis):
+            raise ValueError("Given client is not a Redis-Class.")
 
         _thread.client = client
     return _thread.client

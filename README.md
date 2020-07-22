@@ -30,7 +30,7 @@ In the following, the options of this library will be described.
 
 ### Set redis as client
 
-As default, the library use StrictRedis from [redis-py](https://pypi.org/project/redis/) as implementation. If you want to use another implementation, you have to inherit from this class.
+As default, the library use Redis from [redis-py](https://pypi.org/project/redis/) as implementation. If you want to use another implementation, you have to inherit from this class.
 
 If you do not set the client-argument as follows, the library assumes to use a local installation on port 6379.
 
@@ -43,8 +43,8 @@ You can initialize the redis client by yourself, too.
 
 ```python
 from datatype_redis import String
-from redis import StrictRedis
-r = StrictRedis(host='myremotehost', port=6379, db=0)
+from redis import Redis
+r = Redis(host='myremotehost', port=6379, db=0)
 foo = String("bar", client=r)
 ```
 
@@ -53,11 +53,11 @@ foo = String("bar", client=r)
 If you want to use a redisCluster, you can do this with the client-parameter, too.
 
 ```python
-from rediscluster import StrictRedisCluster
+from rediscluster import RedisCluster
 from datatype_redis import String
 # Requires at least one node for cluster discovery. Multiple nodes is recommended.
 startup_nodes = [{"host": "myremotehost", "port": "7000"}]
-foo = String("bar", client=StrictRedisCluster, startup_nodes=startup_nodes)
+foo = String("bar", client=RedisCluster, startup_nodes=startup_nodes)
 ```
 
 You can overwrite the default behaviour with the following `configure` function.
