@@ -17,6 +17,7 @@ def base_wrapper(init):
     return wrapper
 
 
+datatype_redis.configure(host=os.getenv("REDIS_HOST", "localhost"), port=os.getenv("REDIS_PORT", "6379"))
 datatype_redis.Base.__init__ = base_wrapper(datatype_redis.Base.__init__)
 
 
