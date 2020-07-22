@@ -36,11 +36,12 @@ from datatype_redis import String
 foo = String("bar", client={"host":"myremotehost", "port":6379})
 ```
 
-You can initialize the redis client for yourself.
+You can initialize the redis client by yourself, too.
 
 ```python
-from redis import Redis
-r = Redis(host='myremotehost', port=6379, db=0)
+from datatype_redis import String
+from redis import StrictRedis
+r = StrictRedis(host='myremotehost', port=6379, db=0)
 foo = String("bar", client=r)
 ```
 
@@ -49,11 +50,11 @@ foo = String("bar", client=r)
 If you want to use a redisCluster, you can do this with the client-parameter, too.
 
 ```python
-from rediscluster import RedisCluster
+from rediscluster import StrictRedisCluster
 from datatype_redis import String
 # Requires at least one node for cluster discovery. Multiple nodes is recommended.
 startup_nodes = [{"host": "myremotehost", "port": "7000"}]
-foo = String("bar", client=RedisCluster, startup_nodes=startup_nodes)
+foo = String("bar", client=StrictRedisCluster, startup_nodes=startup_nodes)
 ```
 
 You can overwrite the default behaviour with the following `configure` function.

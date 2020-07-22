@@ -1,4 +1,4 @@
-from redis import Redis, StrictRedis
+from redis import StrictRedis
 
 
 class RedisClient(StrictRedis):
@@ -8,5 +8,5 @@ class RedisClient(StrictRedis):
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("decode_responses", True)
-        super(RedisClient, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 

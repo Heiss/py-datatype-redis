@@ -11,3 +11,12 @@ update-dependencies:
 	pipenv update
 	pipenv lock -r > requirements.txt
 	pipenv lock -r -d > requirements-dev.txt
+
+build:
+	python setup.py build
+
+install:
+	python setup.py install
+
+sdist:
+	python setup.py sdist
