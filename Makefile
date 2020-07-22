@@ -19,4 +19,4 @@ sdist:
 	python setup.py sdist
 
 clean:
-	rm -r dist *.egg-info
+	rm -r dist src/*.egg-info build .coverage coverage.xml .pytest_cache
