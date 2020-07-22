@@ -30,6 +30,8 @@ __all__ = [
     "String",
     "PubSubString",
     "List",
+    "PubSubList",
+    "PubSubCacheList",
     "Queue",
     "LifoQueue",
     "SetQueue",
@@ -44,4 +46,6 @@ __all__ = [
     "Semaphore",
     "Lock",
     "RLock",
+    "PubSubCache",
+    "PubSubCacheAtomic"
 ]

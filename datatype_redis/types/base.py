@@ -4,11 +4,20 @@ from .operator import *
 import operator
 
 class Base(Object):
-    def __init__(self, initial=None, key=None, serializer=None, client=None, **kwargs):
-        """
-        Base type that all others inherit. Contains the basic comparison
+    def __init__(self, initial=None, key=None, serializer=None, client=None, namespace=None, **kwargs):
+        """Base type that all others inherit. Contains the basic comparison
         operators as well as the dispatch for proxying to methods on the
         Redis client.
+
+        Args:
+            initial (object, optional): Set the value to this initial value. Defaults to None.
+            key (string, optional): Set the key of this object to this value. Defaults to None.
+            serializer (object, optional): Use this serializer. Needs `loads` and `dumps` method. Defaults to None.
+            client (object, optional): Use this (redis) client. Defaults to None.
+            namespace (string, optional): Use this namespace. Overwrites prefix from configure. Defaults to None.
+
+        Raises:
+            ValueError: Raises, when the serializer is not valid.
         """
 
         try:
@@ -31,7 +40,7 @@ class Base(Object):
 
         self.key = key or str(uuid.uuid4())
 
-        self.prefix = get_prefix
+        self.prefix = namespace or get_prefix
         self.prefixer = '{}/{{}}'.format(self.prefix).format
 
         if initial is not None:
@@ -49,6 +58,14 @@ class Base(Object):
     __le__ = op_left(operator.le)
     __gt__ = op_left(operator.gt)
     __ge__ = op_left(operator.ge)
+
+    @property
+    def value(self):
+        raise NotImplementedError()
+
+    @value.setter
+    def value(self, value):
+        raise NotImplementedError()
 
     def __repr__(self):
         bits = (self.__class__.__name__, repr(self.value), self.key)

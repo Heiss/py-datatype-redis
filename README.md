@@ -2,6 +2,10 @@
 
 This library implements all builtin datatypes from python3 with a redis backend.
 
+## Status
+
+Work in progress, not usable
+
 ## Usage
 
 ```python
@@ -143,6 +147,44 @@ foo = String("foo", serializer=json)
 ### PubSub Backend
 
 If you need to get your results ASAP, but you change them rarely, you should take a look at the pubsub-cache implementation. This will reduce the latency for get-requests drastically, but you will get every problem with caches.
+
+If you want to set a cache to an atomic datatype like String or Int, you can use the `PubSubCacheAtomic` class. You have to initialize a cache to store the values. Also, you have to use a specialized implementation of the corresponding datatype, called `PubSub*`. See the following example.
+
+```python
+from datatype_redis import PubSubCacheAtomic, PubSubString
+from pylru import lrucache
+
+cache = lrucache(1)
+store = PubSubString("foo")
+redcache = PubSubCacheAtomic(store, cache)
+```
+
+The following table shows the PubSub classes of each atomic datatype.
+
+| atomic | PubSub       |
+| ------ | ------------ |
+| Bool   | PubSubBool   |
+| String | PubSubString |
+| Int    | PubSubInt    |
+| Float  | PubSubFloat  |
+ 
+For complex datatypes (called datastructure) like Dict or List, you have to use the correspondig `PubSubCache*` classes (Do not use the `PubSubCacheAtomic` class for datastructures).
+
+| datastructure | PubSubCache*    |
+| ------------- | --------------- |
+| Dict          | PubSubCacheDict |
+| List          | PubSubCacheList |
+
+You use them as follows.
+
+```python
+from datatype_redis import PubSubCacheDict, PubSubDict
+from pylru import lrucache
+
+cache = lrucache(10)
+store = PubSubDict()
+redcache = PubSubCacheDict(store, cache)
+```
 
 ## Examples and Demonstrations
 

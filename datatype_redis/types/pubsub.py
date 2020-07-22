@@ -7,7 +7,7 @@ class PubSub(Base):
         self.pubsub = self.client.pubsub()
 
         try:
-            value.fset = super().publish_wrap(super().value.fset)
+            self.value.fset = super().publish_wrap(super().value.fset)
         except NameError:
             pass
 
@@ -40,6 +40,7 @@ class PubSub(Base):
         def wrapper(*args, **kwargs):
             f(*args, **kwargs)
             self.publish("update", **kwargs)
+
         return wrapper
 
     def close(self):
