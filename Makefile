@@ -1,5 +1,8 @@
+build:
+	python setup.py build
+
 install:
-	pip install requirements.txt
+	python setup.py install
 
 install-dev:
 	pip install requirements_dev.txt
@@ -12,11 +15,8 @@ update-dependencies:
 	pipenv lock -r > requirements.txt
 	pipenv lock -r -d > requirements-dev.txt
 
-build:
-	python setup.py build
-
-install:
-	python setup.py install
-
 sdist:
 	python setup.py sdist
+
+clean:
+	rm -r dist *.egg-info
