@@ -1,6 +1,7 @@
 from ..boolean.bitwise import Bitwise
 from ..operator import inplace, op_right
-import operator, uuid
+import operator
+import uuid
 from functools import reduce
 
 

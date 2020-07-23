@@ -25,9 +25,8 @@ def op_left(op):
     when the instance appears on the left side of the expression.
     """
 
-    def method(self, right):
-        return op(self.value, value_left(self, right))
-
+    def method(self, other):
+        return op(self.value, value_left(self, other))
     return method
 
 
@@ -37,9 +36,8 @@ def op_right(op):
     when the instance appears on the right side of the expression.
     """
 
-    def method(self, right):
-        return op(value_left(self, right), value_right(self, right))
-
+    def method(self, other):
+        return op(value_left(self, other), value_right(self, other))
     return method
 
 
@@ -62,8 +60,3 @@ def to_bits(m):
 
 def tbl_to_number(m):
     return int(m)
-
-
-
-
-

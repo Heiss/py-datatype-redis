@@ -38,6 +38,10 @@ datatype_redis.Base.__init__ = base_wrapper(datatype_redis.Base.__init__)
 
 
 class BaseTestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.maxDiff = None
+
     def tearDown(self):
         client = datatype_redis.default_client()
         while keys:
@@ -51,4 +55,3 @@ class BaseTestCase(unittest.TestCase):
     def assertAlmostEqual(self, a, b):
         kwargs = {"places": TEST_PRECISION}
         return super(BaseTestCase, self).assertAlmostEqual(a, b, **kwargs)
-

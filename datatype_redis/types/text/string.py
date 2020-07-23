@@ -9,13 +9,17 @@ class String(Sequential):
     Redis string <-> Python string (although mutable).
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.value = None
+
     @property
     def value(self):
-        return self.get() or ""
+        return str(self.get() or b"", "utf-8")
 
     @value.setter
     def value(self, value):
-        if value:
+        if value is not None:
             self.set(value)
 
     __iadd__ = inplace("append")
@@ -62,7 +66,7 @@ class String(Sequential):
         s = self.getrange(start, stop - 1)
         if not s:
             raise IndexError
-        return s
+        return s.decode("utf-8")
 
     def __iter__(self):
         return iter(self.value)
@@ -81,7 +85,7 @@ class ImmutableString(String):
         self.key = self.__class__(self * i).key
         return self
 
-    def __setitem__(self, i):
+    def __setitem__(self, i, s):
         raise TypeError
 
 

@@ -30,7 +30,7 @@ class List(Sequential):
 
     def __setitem__(self, i, item):
         try:
-            self.lset(i, item)
+            self.lset(i, self.dumps(item))
         except redis.exceptions.ResponseError:
             raise IndexError
 
@@ -38,11 +38,12 @@ class List(Sequential):
         if isinstance(i, slice):
             start = i.start if i.start is not None else 0
             stop = i.stop if i.stop is not None else 0
-            return self.lrange(start, stop - 1)
+            return [self.loads(item, raw=False) for item in self.lrange(start, stop - 1)]
+
         item = self.lindex(i)
         if item is None:
             raise IndexError
-        return item
+        return self.loads(item, raw=False)
 
     def __delitem__(self, i):
         self.pop(i)
@@ -54,11 +55,11 @@ class List(Sequential):
         self.extend([item])
 
     def extend(self, other):
-        self.rpush(*other)
+        self.rpush(*(self.dumps(o) for o in other))
 
     def insert(self, i, item):
         if i == 0:
-            self.lpush(item)
+            self.lpush(self.dumps(item))
         else:
             self.list_insert(i, item)
 
@@ -80,19 +81,23 @@ class List(Sequential):
         return self.value.count(item)
 
     def sort(self, reverse=False):
-        self._dispatch("sort")(desc=reverse, store=self.prefixer(self.key), alpha=True)
+        self._dispatch("sort")(
+            desc=reverse,
+            store=self.prefixer(self.key),
+            alpha=True
+        )
 
     @ValueDecorator
-    def list_pop(self, right):
+    def list_pop(self, i):
         value = list(self.value)
-        del value[right]
+        del value[i]
         self.value = value
         return value
 
     @ValueDecorator
-    def list_insert(self, i, right):
+    def list_insert(self, i, item):
         value = list(self.value)
-        value.insert(i, right)
+        value.insert(i, item)
         self.value = value
         return value
 
@@ -103,7 +108,7 @@ class List(Sequential):
         return value
 
     @ValueDecorator
-    def list_multiply(self, right):
-        value = self.value * right
+    def list_multiply(self, f):
+        value = self.value * f
         self.value = value
         return value

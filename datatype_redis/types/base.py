@@ -21,7 +21,7 @@ def ValueDecorator(fn):
     return wrapper
 
 
-class Base:
+class Base(object):
     def __init__(
         self,
         initial=None,
@@ -91,6 +91,8 @@ class Base:
 
     @property
     def prefix(self):
+        if isinstance(self._prefix, str):
+            return self._prefix
         return self._prefix()
 
     @property
@@ -101,6 +103,14 @@ class Base:
     def value(self, value):
         raise NotImplementedError()
 
+    @property
+    def client(self):
+        return self._client or default_client()
+
+    @client.setter
+    def client(self, value):
+        self._client = value
+
     def __repr__(self):
         bits = (self.__class__.__name__, repr(self.value), self.key)
         return "%s(%s, '%s')" % bits
@@ -109,23 +119,14 @@ class Base:
         return self._dispatch(name)
 
     def _dispatch(self, name):
-        def func(fn):
-            @wraps(fn)
-            def wrapper(*a, **k):
-                try:
-                    if True in [val.startswith(self.prefix) for val in a if isinstance(val, str)]:
-                        raise ValueError
-
-                    return fn(self.prefixer(self.key), *a, **k)
-                except ValueError:
-                    return fn(*a, **k)
-
-            return wrapper
-
+        func = getattr(self.client, name)
         try:
-            return func(getattr(self.client or default_client(), name))
-        except (AttributeError):
-            return func(getattr(self, name))
+            return lambda *a, **k: func(self.prefixer(self.key), *a, **k)
+        except (ValueError, TypeError):
+            return lambda *a, **k: func(*a, **k)
+
+    def clear(self):
+        self.client.delete()
 
     def rename(self, new_redis_key):
         """Moves the value to a new key. 

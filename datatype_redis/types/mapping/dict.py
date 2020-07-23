@@ -8,25 +8,19 @@ class Dict(Base):
     """
 
     def __init__(self, *args, **kwargs):
-        super(Dict, self).__init__(*args, **kwargs)
-
+        super().__init__(*args, **kwargs)
         self.prefixer = "{}/{}/{{}}".format(self.prefix, self.key).format
 
     @property
     def value(self):
-        return dict(self.items())
+        d = {}
+        d.update(dict(self.items()))
+        return d
 
     @value.setter
     def value(self, value=None):
-        if not isinstance(value, dict):
-            try:
-                value = dict(value)
-            except TypeError:
-                value = None
-
         if value is not None:
-            with transaction() as _:
-                self.update(value)
+            self.update(value)
 
     def __len__(self):
         return sum(1 for k in self._keys())
@@ -41,7 +35,7 @@ class Dict(Base):
         self.set(self.prefixer(key), self.dumps(value))
 
     def __getitem__(self, key):
-        value = self.loads(self.get(self.prefixer(key)))
+        value = self.get(key)
         if value is None:
             raise KeyError(key)
         return value
@@ -56,14 +50,19 @@ class Dict(Base):
 
     def keys(self):
         prefix = self.prefixer("")
-        return (k.strip(prefix) for k in self._keys())
+        return (k.decode("utf-8").replace(prefix, "", 1) for k in self._keys())
 
     def values(self):
         return (self[k] for k in self.keys())
 
     def update(self, value):
-        with transaction() as _:
-            self.clear()
+        if not isinstance(value, dict):
+            try:
+                value = dict(value)
+            except TypeError:
+                raise
+
+        with transaction():
             for key, val in value.items():
                 self[key] = val
 
@@ -74,11 +73,13 @@ class Dict(Base):
         if self.setnx(self.prefixer(key), self.dumps(value)) == 1:
             return value
         else:
-            return self.get(self.prefixer(key))
+            return self.get(key)
 
     def get(self, key, default=None):
-        value = super().get(self.prefixer(key))
-        return value if value is not None else default
+        try:
+            return self.loads(self.client.get(self.prefixer(key)), raw=False)
+        except (KeyError, TypeError):
+            return default
 
     def has_key(self, key):
         return key in self.keys()
@@ -100,17 +101,14 @@ class Dict(Base):
         return iter(self.items())
 
     def _dispatch(self, name):
-        return func(getattr(self, name))
+        func = getattr(self.client, name)
+        return lambda *a, **k: func(*a, **k)
 
     @classmethod
     def fromkeys(cls, *args):
         if len(args) == 1:
             args += ("",)
         return cls({}.fromkeys(*args))
-
-    def _dispatch(self, name):
-        func = getattr(self.client or default_client(), name)
-        return lambda *a, **k: func(*a, **k)
 
 
 class DefaultDict(Dict):

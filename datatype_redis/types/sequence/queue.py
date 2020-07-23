@@ -51,11 +51,13 @@ class Queue(List):
         if block:
             item = self.blpop(timeout=timeout)
             if item is not None:
-                item = item[1]
+                item = self.loads(item[1], raw=False)
         else:
             item = self.pop()
+
         if item is None:
             raise queue.Empty
+
         return item
 
     def get_nowait(self):
@@ -80,7 +82,7 @@ class LifoQueue(Queue):
     """
 
     def append(self, item):
-        self.lpush(item)
+        self.lpush(self.dumps(item))
 
 
 class SetQueue(Queue):
@@ -90,7 +92,7 @@ class SetQueue(Queue):
 
     def __init__(self, *args, **kwargs):
         super(SetQueue, self).__init__(*args, **kwargs)
-        self.set = Set(key="%s-set" % self.key)
+        self.set = Set(key="%s-set" % self.prefixer(self.key))
 
     def get(self, *args, **kwargs):
         item = super(SetQueue, self).get(*args, **kwargs)
