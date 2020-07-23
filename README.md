@@ -284,3 +284,9 @@ print(foo) # expect: {"foo":"bar", "bar":[1,2,3]}
 #### Bytes
 #### Bytearray
 #### MemoryView
+
+## Microservices
+
+The main purpose of this library is to use in a microservice ecosystem like a container in kubernetes. You have to run a redis instance in your cloud, configure your client with `configure()` for this library, so your microservice use redis as backend for your datatypes. This will make your values available on all your microservice implementations with same keys.
+
+For redis in kubernetes, you should use a helm chart e.g. [redis-ha](https://github.com/DandyDeveloper/charts/tree/master/charts/redis-ha).
