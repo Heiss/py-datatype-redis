@@ -1,9 +1,10 @@
 import uuid
 from ..client import default_client, transaction, get_prefix
-from .operator import *
+from .operator import op_left, op_right, inplace
 import operator
 from functools import wraps
 from redis.exceptions import ResponseError
+
 
 def ValueDecorator(fn):
     @wraps(fn)
@@ -56,7 +57,8 @@ class Base:
 
         if serializer is not None:
             if not hasattr(serializer, "loads") or not hasattr(serializer, "dumps"):
-                raise ValueError("serializer does not have loads or dumps method.")
+                raise ValueError(
+                    "serializer does not have loads or dumps method.")
 
             self.loads = serializer.loads
             self.dumps = serializer.dumps
@@ -68,8 +70,8 @@ class Base:
 
         self.key = key or str(uuid.uuid4())
 
-        self.prefix = namespace or get_prefix
-        self.prefixer = "{}/{{}}".format(self.prefix()).format
+        self._prefix = namespace or get_prefix
+        self.prefixer = "{}/{{}}".format(self.prefix).format
 
         if initial is not None:
             if key is None:
@@ -88,6 +90,10 @@ class Base:
     __ge__ = op_left(operator.ge)
 
     @property
+    def prefix(self):
+        return self._prefix()
+
+    @property
     def value(self):
         raise NotImplementedError()
 
@@ -103,16 +109,27 @@ class Base:
         return self._dispatch(name)
 
     def _dispatch(self, name):
+        def func(fn):
+            @wraps(fn)
+            def wrapper(*a, **k):
+                try:
+                    if True in [val.startswith(self.prefix) for val in a if isinstance(val, str)]:
+                        raise ValueError
+
+                    return fn(self.prefixer(self.key), *a, **k)
+                except ValueError:
+                    return fn(*a, **k)
+
+            return wrapper
+
         try:
-            func = getattr(self.client or default_client(), name)
-            return lambda *a, **k: func(self.prefixer(self.key), *a, **k)
-        except AttributeError:
-            func = super().__getattribute__(self, name)
-            return lambda *a, **k: func(*a, **k)
+            return func(getattr(self.client or default_client(), name))
+        except (AttributeError):
+            return func(getattr(self, name))
 
     def rename(self, new_redis_key):
         """Moves the value to a new key. 
-        
+
         If the key is already in use, it returns False
 
         Args:
@@ -122,7 +139,7 @@ class Base:
             bool: True, if rename process was a success, otherwise False
         """
         if not self.exists(new_redis_key):
-            self.rename(self.key, new_redis_key)
+            self._dispatch("rename")(self.key, new_redis_key)
             self.key = new_redis_key
             return True
 
@@ -130,7 +147,7 @@ class Base:
 
     def get_redis_key(self):
         """Returns the redis key without prefix.
-                
+
         This key is not equal to a dict key and cannot be used to interact with redis!
 
         Returns:
@@ -147,4 +164,3 @@ class Base:
             string: The full redis key
         """
         return self.prefixer(self.key)
-

@@ -10,7 +10,7 @@ class Dict(Base):
     def __init__(self, *args, **kwargs):
         super(Dict, self).__init__(*args, **kwargs)
 
-        self.prefixer = "{}/{}/{{}}".format(self.prefix(), self.key).format
+        self.prefixer = "{}/{}/{{}}".format(self.prefix, self.key).format
 
     @property
     def value(self):
@@ -25,9 +25,8 @@ class Dict(Base):
                 value = None
 
         if value is not None:
-            with transaction() as client:
-                for key, val in value.items():
-                    self[key] = value
+            with transaction() as _:
+                self.update(value)
 
     def __len__(self):
         return sum(1 for k in self._keys())
@@ -63,7 +62,7 @@ class Dict(Base):
         return (self[k] for k in self.keys())
 
     def update(self, value):
-        with transaction() as client:
+        with transaction() as _:
             self.clear()
             for key, val in value.items():
                 self[key] = val
@@ -88,7 +87,7 @@ class Dict(Base):
         return self.__class__(self.value)
 
     def clear(self):
-        for k in self._keys:
+        for k in self.keys():
             del self[k]
 
     def iterkeys(self):
@@ -99,6 +98,9 @@ class Dict(Base):
 
     def iteritems(self):
         return iter(self.items())
+
+    def _dispatch(self, name):
+        return func(getattr(self, name))
 
     @classmethod
     def fromkeys(cls, *args):
