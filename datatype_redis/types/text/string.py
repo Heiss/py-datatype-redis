@@ -15,18 +15,18 @@ class String(Sequential):
 
     @property
     def value(self):
-        return str(self.get() or b"", "utf-8")
+        return str(self.client.get(self.prefixer(self.key)) or b"", "utf-8")
 
     @value.setter
     def value(self, value):
         if value is not None:
-            self.set(value)
+            self.client.set(self.prefixer(self.key), value)
 
     __iadd__ = inplace("append")
     __imul__ = inplace("multiply")
 
     def __len__(self):
-        return self.strlen()
+        return self.client.strlen(self.prefixer(self.key))
 
     @ValueDecorator
     def append(self, other):
@@ -56,14 +56,14 @@ class String(Sequential):
         if stop is not None and stop < start + len(s):
             self.setitem(start, stop, s)
         else:
-            self.setrange(start, s)
+            self.client.setrange(self.prefixer(self.key), start, s)
 
     def __getitem__(self, i):
         if not isinstance(i, slice):
             i = slice(i, i + 1)
         start = i.start if i.start is not None else 0
         stop = i.stop if i.stop is not None else 0
-        s = self.getrange(start, stop - 1)
+        s = self.client.getrange(self.prefixer(self.key), start, stop - 1)
         if not s:
             raise IndexError
         return s.decode("utf-8")

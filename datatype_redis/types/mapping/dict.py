@@ -1,5 +1,9 @@
 from ..base import Base
 from ...client import transaction, default_client
+import logging
+import inspect
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Dict(Base):
@@ -7,9 +11,32 @@ class Dict(Base):
     Redis hash <-> Python dict
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.prefixer = "{}/{}/{{}}".format(self.prefix, self.key).format
+    def __init__(self,
+                 initial=None,
+                 key=None,
+                 serializer=None,
+                 client=None,
+                 namespace=None,
+                 prefix_format="{}/{}/{{}}",
+                 **kwargs):
+
+        super().__init__(key=key,
+                         serializer=serializer,
+                         client=client,
+                         namespace=namespace)
+
+        self.prefixer = prefix_format.format(self.prefix, self.key).format
+
+        if initial is not None:
+            if key is None:
+                self.value = initial
+            else:
+                # Ensure previous value removed if key and initial
+                # value provided.
+                with transaction():
+                    for k in self.keys():
+                        del self[k]
+                    self.value = initial
 
     @property
     def value(self):
@@ -26,13 +53,13 @@ class Dict(Base):
         return sum(1 for k in self._keys())
 
     def __contains__(self, key):
-        return self.exists(self.prefixer(key))
+        return self.client.exists(self.prefixer(key))
 
     def __iter__(self):
         return self.keys()
 
     def __setitem__(self, key, value):
-        self.set(self.prefixer(key), self.dumps(value))
+        self.set(key, value)
 
     def __getitem__(self, key):
         value = self.get(key)
@@ -41,36 +68,39 @@ class Dict(Base):
         return value
 
     def __delitem__(self, key):
-        if self.delete(self.prefixer(key)) == 0:
+        if self.client.delete(self.prefixer(key)) == 0:
             raise KeyError(key)
 
     def _keys(self):
         match = self.prefixer("*")
-        return self.scan_iter(match=match)
+        return self.client.scan_iter(match=match)
 
     def keys(self):
         prefix = self.prefixer("")
-        return (k.decode("utf-8").replace(prefix, "", 1) for k in self._keys())
+        for k in self._keys():
+            val = k.decode("utf-8").replace(prefix, "", 1)
+            LOGGER.warning("key: {} val: {}".format(k, val))
+            yield val
 
     def values(self):
         return (self[k] for k in self.keys())
 
     def update(self, value):
-        if not isinstance(value, dict):
+        if not isinstance(value, (dict, Dict)):
             try:
                 value = dict(value)
             except TypeError:
                 raise
 
-        with transaction():
-            for key, val in value.items():
+        for key, val in value.items():
+            with transaction():
                 self[key] = val
 
     def items(self):
         return ((k, self[k]) for k in self.keys())
 
     def setdefault(self, key, value=None):
-        if self.setnx(self.prefixer(key), self.dumps(value)) == 1:
+        if self.client.setnx(self.prefixer(key), self.dumps(value)) == 1:
             return value
         else:
             return self.get(key)
@@ -78,8 +108,12 @@ class Dict(Base):
     def get(self, key, default=None):
         try:
             return self.loads(self.client.get(self.prefixer(key)), raw=False)
-        except (KeyError, TypeError):
+        except (KeyError, TypeError) as e:
+            LOGGER.error(e)
             return default
+
+    def set(self, key, value):
+        self.client.set(self.prefixer(key), self.dumps(value))
 
     def has_key(self, key):
         return key in self.keys()
@@ -100,9 +134,14 @@ class Dict(Base):
     def iteritems(self):
         return iter(self.items())
 
-    def _dispatch(self, name):
-        func = getattr(self.client, name)
-        return lambda *a, **k: func(*a, **k)
+    def __eq__(self, other):
+        if isinstance(other, (dict)):
+            return other == self.value
+
+        if isinstance(other, (Dict)):
+            return other.value == self.value
+
+        return False
 
     @classmethod
     def fromkeys(cls, *args):

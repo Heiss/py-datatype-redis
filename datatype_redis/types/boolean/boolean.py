@@ -10,12 +10,12 @@ class Bool(Bitwise):
 
     @property
     def value(self):
-        return bool(self.get() or False)
+        return bool(self.client.get(self.prefixer(self.key)) or False)
 
     @value.setter
     def value(self, value):
         if value is not None:
-            self.set(bool(value))
+            self.client.set(self.prefixer(self.key), bool(value))
 
     __iand__ = inplace("number_and")
     __ior__ = inplace("number_or")

@@ -20,17 +20,17 @@ class List(Sequential):
         self.extend(value)
 
     def clear(self):
-        self.delete()
+        self.client.delete(self.prefixer(self.key))
 
     __iadd__ = inplace("extend")
     __imul__ = inplace("list_multiply")
 
     def __len__(self):
-        return self.llen()
+        return self.client.llen(self.prefixer(self.key))
 
     def __setitem__(self, i, item):
         try:
-            self.lset(i, self.dumps(item))
+            self.client.lset(self.prefixer(self.key), i, self.dumps(item))
         except redis.exceptions.ResponseError:
             raise IndexError
 
@@ -38,9 +38,9 @@ class List(Sequential):
         if isinstance(i, slice):
             start = i.start if i.start is not None else 0
             stop = i.stop if i.stop is not None else 0
-            return [self.loads(item, raw=False) for item in self.lrange(start, stop - 1)]
+            return [self.loads(item, raw=False) for item in self.client.lrange(self.prefixer(self.key), start, stop - 1)]
 
-        item = self.lindex(i)
+        item = self.client.lindex(self.prefixer(self.key), i)
         if item is None:
             raise IndexError
         return self.loads(item, raw=False)
@@ -55,19 +55,19 @@ class List(Sequential):
         self.extend([item])
 
     def extend(self, other):
-        self.rpush(*(self.dumps(o) for o in other))
+        self.client.rpush(self.prefixer(self.key), *(self.dumps(o) for o in other))
 
     def insert(self, i, item):
         if i == 0:
-            self.lpush(self.dumps(item))
+            self.client.lpush(self.prefixer(self.key), self.dumps(item))
         else:
             self.list_insert(i, item)
 
     def pop(self, i=-1):
         if i == -1:
-            return self.rpop()
+            return self.client.rpop(self.prefixer(self.key))
         elif i == 0:
-            return self.lpop()
+            return self.client.lpop(self.prefixer(self.key))
         else:
             return self.list_pop(i)
 
@@ -81,7 +81,7 @@ class List(Sequential):
         return self.value.count(item)
 
     def sort(self, reverse=False):
-        self._dispatch("sort")(
+        self.client.sort(self.prefixer(self.key),
             desc=reverse,
             store=self.prefixer(self.key),
             alpha=True

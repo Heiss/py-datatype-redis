@@ -12,12 +12,12 @@ class Int(Numeric, Bitwise):
 
     @property
     def value(self):
-        return int(float(self.get() or 0))
+        return int(float(self.client.get(self.prefixer(self.key)) or 0))
 
     @value.setter
     def value(self, value):
         if value is not None:
-            self.set(value)
+            self.client.set(self.prefixer(self.key), value)
 
     __iand__ = inplace("number_and")
     __ior__ = inplace("number_or")

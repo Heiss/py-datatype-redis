@@ -9,19 +9,19 @@ class Float(Numeric):
 
     @property
     def value(self):
-        return float(self.get() or 0)
+        return float(self.client.get(self.prefixer(self.key)) or 0)
 
     @value.setter
     def value(self, value):
         if value is not None:
-            self.set(value)
+            self.client.set(self.prefixer(self.key), value)
 
     def __isub__(self, f):
-        self.incrbyfloat(f * -1)
+        self.client.incrbyfloat(self.prefixer(self.key), f * -1)
         return self
 
     def __iadd__(self, f):
-        self.incrbyfloat(f * 1) # this fixes conversion
+        self.client.incrbyfloat(self.prefixer(self.key), f * 1) # this fixes conversion
         return self
 
 class PubSubFloat(Float, PubSub):

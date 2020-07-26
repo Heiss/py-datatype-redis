@@ -29,6 +29,7 @@ class Base(object):
         serializer=None,
         client=None,
         namespace=None,
+        prefix_format = "{}/{{}}",
         **kwargs
     ):
         """Base type that all others inherit. Contains the basic comparison
@@ -53,8 +54,6 @@ class Base(object):
         except Exception:
             self.client = None
 
-        self.key = key if key is not None else uuid.uuid4()
-
         if serializer is not None:
             if not hasattr(serializer, "loads") or not hasattr(serializer, "dumps"):
                 raise ValueError(
@@ -71,7 +70,7 @@ class Base(object):
         self.key = key or str(uuid.uuid4())
 
         self._prefix = namespace or get_prefix
-        self.prefixer = "{}/{{}}".format(self.prefix).format
+        self.prefixer =  prefix_format.format(self.prefix).format
 
         if initial is not None:
             if key is None:
@@ -80,7 +79,7 @@ class Base(object):
                 # Ensure previous value removed if key and initial
                 # value provided.
                 with transaction():
-                    self.delete()
+                    self.client.delete(self.prefixer(self.key))
                     self.value = initial
 
     __eq__ = op_left(operator.eq)
@@ -115,18 +114,9 @@ class Base(object):
         bits = (self.__class__.__name__, repr(self.value), self.key)
         return "%s(%s, '%s')" % bits
 
-    def __getattr__(self, name):
-        return self._dispatch(name)
-
-    def _dispatch(self, name):
-        func = getattr(self.client, name)
-        try:
-            return lambda *a, **k: func(self.prefixer(self.key), *a, **k)
-        except (ValueError, TypeError):
-            return lambda *a, **k: func(*a, **k)
 
     def clear(self):
-        self.client.delete()
+        self.client.delete(self.prefixer(self.key))
 
     def rename(self, new_redis_key):
         """Moves the value to a new key. 
@@ -139,8 +129,8 @@ class Base(object):
         Returns:
             bool: True, if rename process was a success, otherwise False
         """
-        if not self.exists(new_redis_key):
-            self._dispatch("rename")(self.key, new_redis_key)
+        if not self.client.exists(self.prefixer(self.key), new_redis_key):
+            self.client.rename(self.prefixer(self.key), new_redis_key)
             self.key = new_redis_key
             return True
 
