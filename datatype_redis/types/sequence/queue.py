@@ -49,7 +49,7 @@ class Queue(List):
 
     def get(self, block=True, timeout=None):
         if block:
-            item = self.blpop(timeout=timeout)
+            item = self.client.blpop(self.prefixer(self.key), timeout=timeout)
             if item is not None:
                 item = self.loads(item[1], raw=False)
         else:
@@ -82,7 +82,7 @@ class LifoQueue(Queue):
     """
 
     def append(self, item):
-        self.lpush(self.dumps(item))
+        self.client.lpush(self.prefixer(self.key), self.dumps(item))
 
 
 class SetQueue(Queue):
@@ -100,7 +100,7 @@ class SetQueue(Queue):
         return item
 
     def put(self, item, *args, **kwargs):
-        if self.set.sadd(item) > 0:
+        if self.set.client.sadd(self.prefixer(self.key), self.dumps(item)) > 0:
             super(SetQueue, self).put(item, *args, **kwargs)
 
     def delete(self):
