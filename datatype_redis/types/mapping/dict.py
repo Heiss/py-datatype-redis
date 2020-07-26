@@ -79,7 +79,6 @@ class Dict(Base):
         prefix = self.prefixer("")
         for k in self._keys():
             val = k.decode("utf-8").replace(prefix, "", 1)
-            LOGGER.warning("key: {} val: {}".format(k, val))
             yield val
 
     def values(self):
