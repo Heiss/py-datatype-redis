@@ -1,5 +1,6 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/9945440b076661b87ccb/maintainability)](https://codeclimate.com/github/Heiss/py-datatype-redis/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/9945440b076661b87ccb/test_coverage)](https://codeclimate.com/github/Heiss/py-datatype-redis/test_coverage)
+[![PyPI version](https://badge.fury.io/py/datatype-redis.svg)](https://badge.fury.io/py/datatype-redis)
 
 # Redis for builtin-datatypes
 
