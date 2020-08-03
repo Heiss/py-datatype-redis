@@ -3,6 +3,9 @@ from ..operator import inplace, op_right
 import operator
 import uuid
 from functools import reduce
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class Set(Bitwise):
@@ -12,17 +15,24 @@ class Set(Bitwise):
 
     @property
     def value(self):
-        return self.smembers()
+        def loads(items):
+            val = []
+            for item in items:
+                val.append(self.loads(item, raw=False))
+            return val
+
+        return set(loads(self.client.smembers(self.prefixer(self.key))))
 
     @value.setter
     def value(self, item):
+        self.clear()
         self.update(item)
 
     def _all_redis(self, sets):
         return all([isinstance(s, self.__class__) for s in sets])
 
     def _to_keys(self, sets):
-        return [s.key for s in sets]
+        return [s.prefixer(s.key) for s in sets]
 
     __iand__ = inplace("intersection_update")
     __ior__ = inplace("update")
@@ -43,28 +53,46 @@ class Set(Bitwise):
         return self.difference(value)
 
     def __len__(self):
-        return self.scard()
+        return self.client.scard(self.prefixer(self.key))
 
     def __contains__(self, item):
-        return self.sismember(item)
+        return self.client.sismember(self.prefixer(self.key), self.dumps(item))
 
     def __iter__(self):
         return iter(self.value)
+
+    def __eq__(self, other):
+        if isinstance(other, set):
+            return self.value == other
+
+        if isinstance(other, Set):
+            return self.value == other.value
+
+        return False
 
     def add(self, item):
         self.update([item])
 
     def update(self, *sets):
-        self.sadd(*reduce(operator.or_, sets))
+        LOGGER.warning("update: prefix: {}, sets: {}".format(
+            self.prefixer(self.key), sets))
+
+        def dumps(items):
+            return [self.dumps(item) for item in items]
+
+        val = dumps(reduce(operator.or_, sets))
+        LOGGER.warning("set value: {}".format(val))
+
+        self.client.sadd(self.prefixer(self.key), *val)
 
     def pop(self):
-        return self.spop()
+        return self.client.spop(self.prefixer(self.key))
 
     def clear(self):
-        self.delete()
+        self.client.delete(self.prefixer(self.key))
 
     def remove(self, item):
-        if self.srem(item) == 0:
+        if self.client.srem(self.prefixer(self.key), self.dumps(item)) == 0:
             raise KeyError(item)
 
     def discard(self, item):
@@ -75,53 +103,46 @@ class Set(Bitwise):
 
     def intersection(self, *sets):
         if self._all_redis(sets):
-            return self.sinter(*self._to_keys(sets))
+            return self.client.sinter(self.prefixer(self.key), *self._to_keys(sets))
         else:
-            return reduce(operator.and_, (self.value,) + sets)
+            return reduce(operator.and_, (self.value,) + set(sets))
 
     def intersection_update(self, *sets):
         if self._all_redis(sets):
-            self.sinterstore(self.key, *self._to_keys(sets))
+            self.client.sinterstore(self.key, *self._to_keys(sets))
         else:
-            sets = list(reduce(operator.and_, sets))
-            self.set_intersection_update(*sets)
+            self.value = self.intersection(sets)
+
         return self
 
     def union(self, *sets):
         if self._all_redis(sets):
-            return self.sunion(*self._to_keys(sets))
+            return self.client.sunion(*self._to_keys(sets))
         else:
             return reduce(operator.or_, (self.value,) + sets)
 
     def difference(self, *sets):
         if self._all_redis(sets):
-            return self.sdiff(*self._to_keys(sets))
+            return self.client.sdiff(self.prefixer(self.key), *self._to_keys(sets))
         else:
             return reduce(operator.sub, (self.value,) + sets)
 
     def difference_update(self, *sets):
         if self._all_redis(sets):
-            self.sdiffstore(self.key, *self._to_keys(sets))
+            self.client.sdiffstore(self.prefixer(
+                self.key), *self._to_keys(sets))
         else:
-            key = str(uuid.uuid4())
-            flattened = [key]
-            for s in sets:
-                flattened.extend(s)
-                flattened.append(key)
-            self.set_difference_update(*flattened)
+            self.value = self.difference(sets)
         return self
 
     def symmetric_difference(self, other):
-        if isinstance(other, self.__class__):
-            return set(self.set_symmetric_difference("return", other.key))
+        if self._all_redis(sets):
+            return self.value.symmetric_difference(other.value)
         else:
-            return self.value ^ other
+            return reduce(operator.sub, (self.value,) + sets)
 
     def symmetric_difference_update(self, other):
-        if isinstance(other, self.__class__):
-            self.set_symmetric_difference("update", other.key)
-        else:
-            self.set_symmetric_difference("create", *other)
+        self.value = self.value.symmetric_difference(other.value)
         return self
 
     def isdisjoint(self, other):
@@ -132,12 +153,3 @@ class Set(Bitwise):
 
     def issuperset(self, other):
         return self >= other
-
-    def set_intersection_update(self, *args):
-        pass
-
-    def set_difference_update(self, *args):
-        pass
-
-    def set_symmetric_difference(self, *args):
-        pass
