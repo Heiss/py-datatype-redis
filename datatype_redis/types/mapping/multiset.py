@@ -55,7 +55,7 @@ class MultiSet(Dict):
         return [int(v) for v in values]
 
     def get(self, key, default=None):
-        value = self.hget(key)
+        value = self.client.hget(self.prefixer(self.key), key)
         return int(value) if value is not None else default
 
     def _merge(self, iterable=None, **kwargs):
@@ -82,7 +82,7 @@ class MultiSet(Dict):
 
     def _update(self, iterable, multiplier, **kwargs):
         for k, v in self._merge(iterable, **kwargs):
-            self.hincrby(k, v * multiplier)
+            self.client.hincrby(self.prefixer(k), v * multiplier)
 
     def update(self, iterable=None, **kwargs):
         self._update(iterable, 1, **kwargs)
