@@ -13,6 +13,11 @@ class Set(Bitwise):
     Redis set <-> Python set
     """
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if len(self.value) == 0:
+            self.clear()
+
     @property
     def value(self):
         def loads(items):
@@ -73,7 +78,9 @@ class Set(Bitwise):
         return False
 
     def add(self, item):
-        self.update([item])
+        if isinstance(item, (tuple, list)):
+            return self.update(*item)
+        return self.update([item])
 
     def update(self, *sets):
         LOGGER.warning("update: prefix: {}, sets: {}".format(
@@ -85,7 +92,7 @@ class Set(Bitwise):
         val = dumps(reduce(operator.or_, sets))
         LOGGER.warning("set value: {}".format(val))
 
-        self.client.sadd(self.prefixer(self.key), *val)
+        return self.client.sadd(self.prefixer(self.key), *val) > 0
 
     def pop(self):
         return self.client.spop(self.prefixer(self.key))

@@ -91,17 +91,17 @@ class SetQueue(Queue):
     """
 
     def __init__(self, *args, **kwargs):
-        super(SetQueue, self).__init__(*args, **kwargs)
-        self.set = Set(key="%s-set" % self.prefixer(self.key))
+        super().__init__(*args, **kwargs)
+        self.set = Set(key=f"{self.prefixer(self.key)}-set")
 
     def get(self, *args, **kwargs):
-        item = super(SetQueue, self).get(*args, **kwargs)
+        item = super().get(*args, **kwargs)
         self.set.remove(item)
         return item
 
     def put(self, item, *args, **kwargs):
-        if self.set.client.sadd(self.prefixer(self.key), self.dumps(item)) > 0:
-            super(SetQueue, self).put(item, *args, **kwargs)
+        if self.set.add(item):
+            super().put(item, *args, **kwargs)
 
     def delete(self):
         self._dispatch("delete")

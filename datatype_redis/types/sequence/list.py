@@ -52,10 +52,16 @@ class List(Sequential):
         return iter(self.value)
 
     def append(self, item):
-        self.extend([item])
+        if isinstance(item, (list, tuple)):
+            self.extend(item)
+        else:
+            self.extend([item])
 
     def extend(self, other):
-        self.client.rpush(self.prefixer(self.key), *(self.dumps(o) for o in other))
+        self.client.rpush(
+            self.prefixer(self.key),
+            *[self.dumps(o) for o in other]
+        )
 
     def insert(self, i, item):
         if i == 0:
@@ -82,10 +88,10 @@ class List(Sequential):
 
     def sort(self, reverse=False):
         self.client.sort(self.prefixer(self.key),
-            desc=reverse,
-            store=self.prefixer(self.key),
-            alpha=True
-        )
+                         desc=reverse,
+                         store=self.prefixer(self.key),
+                         alpha=True
+                         )
 
     @ValueDecorator
     def list_pop(self, i):

@@ -1,6 +1,10 @@
 from .dict import Dict
 from ..operator import op_left, op_right, inplace
-import operator, collections
+import operator
+import collections
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class MultiSet(Dict):
@@ -9,13 +13,14 @@ class MultiSet(Dict):
     """
 
     def __init__(self, iterable=None, key=None, **kwargs):
-        super(MultiSet, self).__init__(key=key)
+        super().__init__(key=key)
         self.update(iterable=iterable, **kwargs)
 
     @property
     def value(self):
-        value = super(MultiSet, self).value
-        kwargs = dict([(k, int(v)) for k, v in value.items()])
+        value = super().value
+        kwargs = dict([(k, int(v))
+                       for k, v in value.items()])
         return collections.Counter(**kwargs)
 
     __add__ = op_left(operator.add)
@@ -36,13 +41,13 @@ class MultiSet(Dict):
     # missing values.
     def __getitem__(self, name):
         try:
-            return super(MultiSet, self).__getitem__(name)
+            return super().__getitem__(name)
         except KeyError:
             return 0
 
     def __delitem__(self, name):
         try:
-            super(MultiSet, self).__delitem__(name)
+            super().__delitem__(name)
         except KeyError:
             pass
 
@@ -51,22 +56,17 @@ class MultiSet(Dict):
         return "%s(%s, '%s')" % bits
 
     def values(self):
-        values = super(MultiSet, self).values()
+        values = super().values()
         return [int(v) for v in values]
 
     def get(self, key, default=None):
-        value = self.client.hget(self.prefixer(self.key), key)
+        value = super().get(key)
         return int(value) if value is not None else default
 
     def _merge(self, iterable=None, **kwargs):
         if iterable:
             try:
-                try:
-                    # Python 2.
-                    items = iterable.iteritems()
-                except AttributeError:
-                    # Python 3.
-                    items = iterable.items()
+                items = iterable.items()
             except AttributeError:
                 for k in iterable:
                     kwargs[k] = kwargs.get(k, 0) + 1
@@ -77,12 +77,14 @@ class MultiSet(Dict):
 
     def _flatten(self, iterable, **kwargs):
         for k, v in self._merge(iterable, **kwargs):
-            yield k
-            yield v
+            yield k, v
 
     def _update(self, iterable, multiplier, **kwargs):
         for k, v in self._merge(iterable, **kwargs):
-            self.client.hincrby(self.prefixer(k), v * multiplier)
+            LOGGER.debug(
+                f"update - key: {k}, value: {v}, multiplier: {multiplier}")
+            self[k] = self.get(k, 0) + v * multiplier
+            LOGGER.debug(f"value: {self[k]}")
 
     def update(self, iterable=None, **kwargs):
         self._update(iterable, 1, **kwargs)
@@ -92,6 +94,7 @@ class MultiSet(Dict):
 
     def intersection_update(self, iterable=None, **kwargs):
         self.multiset_intersection_update(*self._flatten(iterable, **kwargs))
+        return self
 
     def union_update(self, iterable=None, **kwargs):
         self.multiset_union_update(*self._flatten(iterable, **kwargs))
@@ -107,8 +110,30 @@ class MultiSet(Dict):
             values = values[:n]
         return values
 
-    def multiset_intersection_update(self, *args):
-        pass
+    def multiset_intersection_update(self, *flatten):
+        intersect_dict = {}
+        for key, value in flatten:
+            intersect_dict[key] = value
+
+        keys = set([x for x in self.keys()])
+        filterKeys = set(intersect_dict.keys())
+
+        intersect_keys = keys & filterKeys
+
+        LOGGER.debug(
+            f"intersection - keys: {keys}, filterKeys: {filterKeys} remove keys: {intersect_keys}")
+
+        for k in intersect_keys:
+            if self[k] < intersect_dict[k]:
+                self[k] = intersect_dict[k]
+
+        for k in keys - intersect_keys:
+            del self[k]
+
+    def multiset_union_update(self, *flatten):
+        for key, value in flatten:
+            if self[key] < value:
+                self[key] = value
 
 
 collections.MutableMapping.register(MultiSet)

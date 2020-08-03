@@ -107,9 +107,10 @@ class Dict(Base):
     def get(self, key, default=None):
         try:
             return self.loads(self.client.get(self.prefixer(key)), raw=False)
-        except (KeyError, TypeError) as e:
-            LOGGER.error(e)
+        except (KeyError, TypeError) as _:
             return default
+        except ValueError:
+            return self.client.get(self.prefixer(key))
 
     def set(self, key, value):
         self.client.set(self.prefixer(key), self.dumps(value))

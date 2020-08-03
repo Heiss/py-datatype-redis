@@ -9,6 +9,12 @@ class SetTests(BaseTestCase):
     def test_empty(self):
         self.assertEqual(datatype_redis.Set(), set())
 
+    def test_empty_put(self):
+        a = "wagwaan"
+        s = datatype_redis.Set()
+        s.add(a)
+        self.assertEqual(set([a]), s)
+
     def test_add(self):
         a = set(["wagwaan", "hot", "skull"])
         b = datatype_redis.Set(a)
@@ -114,7 +120,8 @@ class SetTests(BaseTestCase):
         self.assertEqual(e, d.difference(b, c))
         self.assertEqual(e, d.difference(datatype_redis.Set(b), c))
         self.assertEqual(e, d.difference(b, datatype_redis.Set(c)))
-        self.assertEqual(e, d.difference(datatype_redis.Set(b), datatype_redis.Set(c)))
+        self.assertEqual(e, d.difference(
+            datatype_redis.Set(b), datatype_redis.Set(c)))
 
     def test_difference_update(self):
         a = set(["wagwaan", "hot", "skull"])
