@@ -2,13 +2,9 @@ name: Redis container testing environment
 on: push
 
 jobs:
-  # Label of the container job
   test:
-    # Containers must run in Linux based operating systems
+    name: coverage
     runs-on: ubuntu-latest
-    # Docker Hub image that `container-job` executes in
-    container: python:3.6
-
     # Service containers to run with `container-job`
     services:
       # Label used to access the service container
@@ -21,22 +17,20 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
-      # Downloads a copy of the code in your repository before running CI tests
-      - name: Check out repository code
-        uses: actions/checkout@v2
-
-      - name: Run tests
-        # Runs a script that creates a Redis client, populates
-        # the client with data, and retrieves data
-        run: make test
-        # Environment variable used by the library to create a new Redis client.
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@master
+        with:
+          python-version: "3.6"
+      - uses: paambaati/codeclimate-action@v2.5.3
         env:
+          CC_TEST_REPORTER_ID: ${{ secrets.CodeClimate }}
           # The hostname used to communicate with the Redis service container
           REDIS_HOST: redis
           # The default Redis port
           REDIS_PORT: 6379
+        with:
+          coverageCommand: make test
 
   build-n-publish:
     needs: test
@@ -57,18 +51,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
-
-  coverage:
-    needs: [ test ]
-    name: coverage
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@master
-    - uses: actions/setup-python@master
-      with:
-        python-version: '3.6'
-    - uses: paambaati/codeclimate-action@v2.5.3
-      env:
-        CC_TEST_REPORTER_ID: ${{ secrets.CodeClimate }}
-      with:
-        coverageCommand: coverage xml
