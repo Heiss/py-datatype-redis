@@ -29,7 +29,9 @@ class Set(Bitwise):
         self.update(item)
 
     def _all_redis(self, sets):
-        return all([isinstance(s, self.__class__) for s in sets])
+        return False
+        """TODO
+        all([isinstance(s, self.__class__) for s in sets])"""
 
     def _to_keys(self, sets):
         return [s.prefixer(s.key) for s in sets]
@@ -105,13 +107,13 @@ class Set(Bitwise):
         if self._all_redis(sets):
             return self.client.sinter(self.prefixer(self.key), *self._to_keys(sets))
         else:
-            return reduce(operator.and_, (self.value,) + set(sets))
+            return reduce(operator.and_, (self.value,) + sets)
 
     def intersection_update(self, *sets):
         if self._all_redis(sets):
             self.client.sinterstore(self.key, *self._to_keys(sets))
         else:
-            self.value = self.intersection(sets)
+            self.value = self.intersection(*sets)
 
         return self
 
@@ -123,7 +125,7 @@ class Set(Bitwise):
 
     def difference(self, *sets):
         if self._all_redis(sets):
-            return self.client.sdiff(self.prefixer(self.key), *self._to_keys(sets))
+            return self.client.sdiff(*self._to_keys(sets))
         else:
             return reduce(operator.sub, (self.value,) + sets)
 
@@ -132,17 +134,17 @@ class Set(Bitwise):
             self.client.sdiffstore(self.prefixer(
                 self.key), *self._to_keys(sets))
         else:
-            self.value = self.difference(sets)
+            self.value = self.difference(*sets)
         return self
 
     def symmetric_difference(self, other):
-        if self._all_redis(sets):
-            return self.value.symmetric_difference(other.value)
+        if isinstance(other, self.__class__):
+            return self.value.symmetric_difference(other)
         else:
-            return reduce(operator.sub, (self.value,) + sets)
+            return self.value ^ other
 
     def symmetric_difference_update(self, other):
-        self.value = self.value.symmetric_difference(other.value)
+        self.value = self.value.symmetric_difference(other)
         return self
 
     def isdisjoint(self, other):
