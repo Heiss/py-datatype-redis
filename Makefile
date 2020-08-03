@@ -7,7 +7,7 @@ install:
 install-dev:
 	pip install -r requirements_dev.txt | grep -v 'already satisfied' || true
 
-test: install-dev
+test: install install-dev
 	python -m pytest --cov=datatype_redis --cov-report xml
 
 update-dependencies:
