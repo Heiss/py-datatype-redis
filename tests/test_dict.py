@@ -1,7 +1,7 @@
 from tests.prepare import BaseTestCase, datatype_redis, unittest
 
-class DictTests(BaseTestCase):
 
+class DictTests(BaseTestCase):
     def test_value(self):
         a = {"wagwaan": "popcaan", "flute": "don"}
         self.assertEqual(datatype_redis.Dict(a), a)
@@ -65,8 +65,10 @@ class DictTests(BaseTestCase):
         a = datatype_redis.Dict({"wagwaan": "popcaan", "flute": "don"})
         del a["wagwaan"]
         self.assertRaises(KeyError, lambda: a["wagwaan"])
+
         def del_missing():
             del a["hotskull"]
+
         self.assertRaises(KeyError, del_missing)
 
     def test_len(self):
@@ -100,7 +102,6 @@ class DictTests(BaseTestCase):
         c = datatype_redis.Dict.fromkeys(a, b)
         self.assertEqual(c["wagwaan"], b)
 
-    
     def test_defaultdict(self):
         a = "wagwaan"
         b = "popcaan"
@@ -109,7 +110,39 @@ class DictTests(BaseTestCase):
         c[b] += a
         self.assertEqual(c[b], b + a)
 
+    def test_dict_in_dict(self):
+        a_key = "foo"
+        a_val = "bar"
+        b_key = "this"
+        b_val = "awesome"
 
+        inner_dict = {a_key: a_val, b_key: b_val}
+        outer_dict = {"inner_dict": inner_dict}
 
+        redis_inner_dict = datatype_redis.Dict(inner_dict)
+        redis_outer_dict = datatype_redis.Dict({"inner_dict": redis_inner_dict})
 
+        self.assertEqual(inner_dict, redis_inner_dict)
+        self.assertEqual(outer_dict, redis_outer_dict)
+        self.assertEqual(outer_dict.items(), redis_outer_dict.items())
+
+    def test_change_dict_in_dict(self):
+        a_key = "foo"
+        a_val = "bar"
+        a_new_value = "boof"
+        b_key = "this"
+        b_val = "awesome"
+
+        inner_dict = {a_key: a_val, b_key: b_val}
+        outer_dict = {"inner_dict": inner_dict}
+
+        redis_inner_dict = datatype_redis.Dict(inner_dict)
+        redis_outer_dict = datatype_redis.Dict({"inner_dict": redis_inner_dict})
+
+        outer_dict["inner_dict"][a_key] = a_new_value
+        redis_outer_dict["inner_dict"][a_key] = a_new_value
+
+        self.assertEqual(inner_dict, redis_inner_dict)
+        self.assertEqual(outer_dict, redis_outer_dict)
+        self.assertEqual(outer_dict.items(), redis_outer_dict.items())
 
