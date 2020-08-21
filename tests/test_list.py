@@ -1,7 +1,7 @@
 from tests.prepare import BaseTestCase, datatype_redis, unittest
 
-class ListTests(BaseTestCase):
 
+class ListTests(BaseTestCase):
     def test_initial(self):
         a = ["wagwaan", "hot", "skull"]
         b = datatype_redis.List(a)
@@ -32,7 +32,6 @@ class ListTests(BaseTestCase):
         self.assertEqual(a + b, c)
         self.assertEqual(b + a, d)
 
-    
     def test_mul(self):
         a = ["wagwaan", "hot", "skull"]
         b = datatype_redis.List(a)
@@ -63,7 +62,6 @@ class ListTests(BaseTestCase):
         self.assertEqual(a, b)
         # todo: slice
 
-    
     def test_del(self):
         a = ["wagwaan", "hot", "skull"]
         b = datatype_redis.List(a)
@@ -95,7 +93,6 @@ class ListTests(BaseTestCase):
         b.append(i)
         self.assertEqual(a, b)
 
-    
     def test_insert(self):
         a = ["wagwaan", "hot", "skull"]
         b = datatype_redis.List(a)
@@ -107,7 +104,6 @@ class ListTests(BaseTestCase):
         b.insert(0, a[-1])
         self.assertEqual(a, b)
 
-    
     def test_pop(self):
         a = ["wagwaan", "hot", "skull"] * 10
         b = datatype_redis.List(a)
@@ -124,7 +120,6 @@ class ListTests(BaseTestCase):
         b.pop(20)
         self.assertEqual(a, b)
 
-    
     def test_reverse(self):
         a = ["wagwaan", "hot", "skull"]
         b = datatype_redis.List(a)
@@ -154,3 +149,23 @@ class ListTests(BaseTestCase):
         a.sort(reverse=True)
         b.sort(reverse=True)
         self.assertEqual(a, b)
+
+    def test_changes_list_in_list(self):
+        inner_list = ["a", "b"]
+        redis_inner_list = datatype_redis.List(inner_list)
+
+        outer_list = [inner_list]
+        redis_outer_list = datatype_redis.List().append(redis_inner_list)
+
+        self.assertEqual(outer_list, redis_outer_list)
+
+        outer_list[0].append("c")
+        redis_outer_list[0].append("c")
+
+        self.assertEqual(outer_list, redis_outer_list)
+
+        elem = ["another list"]
+        outer_list.append(elem)
+        redis_outer_list.append(elem)
+
+        self.assertEqual(outer_list, redis_outer_list)

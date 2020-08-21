@@ -110,7 +110,7 @@ class DictTests(BaseTestCase):
         c[b] += a
         self.assertEqual(c[b], b + a)
 
-    def test_dict_in_dict(self):
+    def test_change_dict_in_dict(self):
         a_key = "foo"
         a_val = "bar"
         b_key = "this"
@@ -126,23 +126,29 @@ class DictTests(BaseTestCase):
         self.assertEqual(outer_dict, redis_outer_dict)
         self.assertEqual(outer_dict.items(), redis_outer_dict.items())
 
-    def test_change_dict_in_dict(self):
-        a_key = "foo"
-        a_val = "bar"
-        a_new_value = "boof"
-        b_key = "this"
-        b_val = "awesome"
-
-        inner_dict = {a_key: a_val, b_key: b_val}
-        outer_dict = {"inner_dict": inner_dict}
-
-        redis_inner_dict = datatype_redis.Dict(inner_dict)
-        redis_outer_dict = datatype_redis.Dict({"inner_dict": redis_inner_dict})
-
         outer_dict["inner_dict"][a_key] = a_new_value
         redis_outer_dict["inner_dict"][a_key] = a_new_value
 
         self.assertEqual(inner_dict, redis_inner_dict)
+        self.assertEqual(outer_dict, redis_outer_dict)
+        self.assertEqual(outer_dict.items(), redis_outer_dict.items())
+
+    def test_change_list_in_dict(self):
+        inner_list = ["a", "b"]
+
+        redis_inner_list = datatype_redis.List(inner_list)
+
+        outer_dict = {"inner_list": inner_list}
+        redis_outer_dict = datatype_redis.Dict({"inner_list": redis_inner_list})
+
+        self.assertEqual(inner_list, redis_inner_list)
+        self.assertEqual(outer_dict, redis_outer_dict)
+        self.assertEqual(outer_dict.items(), redis_outer_dict.items())
+
+        outer_dict["inner_list"].append("c")
+        redis_outer_dict["inner_list"].append("c")
+
+        self.assertEqual(inner_list, redis_inner_list)
         self.assertEqual(outer_dict, redis_outer_dict)
         self.assertEqual(outer_dict.items(), redis_outer_dict.items())
 
