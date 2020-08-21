@@ -31,7 +31,7 @@ In the following, the options of this library will be described.
 
 ### Set redis as client
 
-As default, the library use Redis from [redis-py](https://pypi.org/project/redis/) as implementation. If you want to use another implementation, you have to inherit from this class.
+As default, the library use Redis from [redis-py](https://pypi.org/project/redis/) as implementation. If you want to use another implementation, you have to inherit from this class like [redis-py-cluster](https://pypi.org/project/redis-py-cluster/) do.
 
 If you do not set the client-argument as follows, the library assumes to use a local installation on port 6379.
 
@@ -51,7 +51,7 @@ foo = String("bar", client=r)
 
 **Beware**: If the client is not compatible with this library, it will raise an `ValueError`.
 
-If you want to use a redisCluster, you can do this with the client-parameter, too.
+If you want to use a redis-cluster (e.g. [redis-py-cluster](https://pypi.org/project/redis-py-cluster/)), you can do this with the client-parameter, too.
 
 ```python
 from rediscluster import RedisCluster
