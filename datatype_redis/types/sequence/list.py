@@ -52,16 +52,22 @@ class List(Sequential):
         return iter(self.value)
 
     def append(self, item):
-        if isinstance(item, (list, tuple)):
-            self.extend(item)
-        else:
-            self.extend([item])
+        if isinstance(item, List):
+            item = item.value
 
-    def extend(self, other):
         self.client.rpush(
             self.prefixer(self.key),
-            *[self.dumps(o) for o in other]
+            self.dumps(item, use_bin_type=True)
         )
+
+    def extend(self, other):
+        if isinstance(other, (list, tuple, List)):
+            self.client.rpush(
+                self.prefixer(self.key),
+                *[self.dumps(o) for o in other]
+            )
+        else:
+            self.append(other)
 
     def insert(self, i, item):
         if i == 0:

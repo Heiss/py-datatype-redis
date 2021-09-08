@@ -23,7 +23,8 @@ class ListTests(BaseTestCase):
     def test_add(self):
         a = ["wagwaan", "hot", "skull"]
         b = ["nba", "hang", "time"]
-        self.assertEqual(a + b, datatype_redis.List(a) + datatype_redis.List(b))
+        self.assertEqual(a + b, datatype_redis.List(a) +
+                         datatype_redis.List(b))
         self.assertEqual(a + b, datatype_redis.List(a) + b)
         c = datatype_redis.List(a)
         d = datatype_redis.List(b)
@@ -154,8 +155,10 @@ class ListTests(BaseTestCase):
         inner_list = ["a", "b"]
         redis_inner_list = datatype_redis.List(inner_list)
 
-        outer_list = [inner_list]
-        redis_outer_list = datatype_redis.List().append(redis_inner_list)
+        outer_list = []
+        redis_outer_list = datatype_redis.List()
+        outer_list.append(inner_list)
+        redis_outer_list.append(redis_inner_list)
 
         self.assertEqual(outer_list, redis_outer_list)
 
